@@ -1,0 +1,341 @@
+import React, { useState } from 'react';
+import { useApp } from '../context/AppContext';
+import { Icon, ICONS } from '../components/Icons';
+
+export function DashboardPage() {
+  const { user, transactions, navigateTo, transferFunds, showToast } = useApp();
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferFrom, setTransferFrom] = useState('roi');
+  const [transferAmount, setTransferAmount] = useState('');
+
+  const recentTxns = transactions.slice(0, 5);
+
+  const handleTransferSubmit = (e) => {
+    e.preventDefault();
+    if (!transferAmount || Number(transferAmount) <= 0) {
+      showToast('Enter valid transfer amount', 'error');
+      return;
+    }
+    transferFunds(transferFrom, 'main', transferAmount);
+    setTransferAmount('');
+    setShowTransferModal(false);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      {/* 2-Column Responsive Home Layout matching Unicorn_Mobile_App.html Screen 13 */}
+      <div className="website-grid-2col" style={{ display: 'flex', flexWrap: 'wrap', gap: '32px', alignItems: 'flex-start' }}>
+        {/* Left Column: Wallet Balance Hero, Buttons & Income Cards */}
+        <div className="website-col-left" style={{ flex: '1 1 440px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          {/* Wallet Balance Hero */}
+          <section style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingTop: '16px' }}>
+            <span style={{ fontSize: '16px', color: 'var(--muted)' }}>Wallet balance</span>
+            <span
+              className="num"
+              style={{
+                fontSize: 'clamp(52px, 7vw, 80px)',
+                fontWeight: 600,
+                lineHeight: 1.05,
+                letterSpacing: '-0.03em'
+              }}
+            >
+              ₹{user.mainWalletBalance.toLocaleString('en-IN')}
+            </span>
+            <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
+              Main deposit wallet · ready to invest
+            </span>
+          </section>
+
+          {/* Action Buttons (.btnp .btnw matching file) */}
+          <div className="hero-action-buttons" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => navigateTo('invest')}
+              className="btnp btnw"
+              style={{ cursor: 'pointer' }}
+            >
+              <span className="gt">Invest</span>
+            </button>
+
+            <button
+              onClick={() => setShowTransferModal(true)}
+              className="btnp"
+              style={{ cursor: 'pointer' }}
+            >
+              Transfer
+            </button>
+
+            <button
+              onClick={() => navigateTo('deposit')}
+              className="btnp"
+              style={{ cursor: 'pointer' }}
+            >
+              Deposit
+            </button>
+
+            <button
+              onClick={() => navigateTo('withdraw')}
+              className="btnp"
+              style={{ cursor: 'pointer' }}
+            >
+              Withdraw
+            </button>
+          </div>
+
+          {/* Income Section */}
+          <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Income</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '12px' }}>
+              {/* ROI Income Card */}
+              <div className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--accent-text)' }}>
+                  <Icon d={ICONS.invest} size={20} />
+                  <span style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text)' }}>ROI Income</span>
+                </div>
+                <span className="num" style={{ fontSize: '32px', fontWeight: 600 }}>
+                  ₹{user.roiWalletBalance.toLocaleString('en-IN')}
+                </span>
+                <span style={{ fontSize: '13px', color: 'var(--pos)' }}>
+                  Today +₹{user.todayRoiIncome.toLocaleString('en-IN')} (0.45%)
+                </span>
+              </div>
+
+              {/* Referral Income Card */}
+              <div className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--accent-text)' }}>
+                  <Icon d={ICONS.referral} size={20} />
+                  <span style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text)' }}>Referral Income</span>
+                </div>
+                <span className="num" style={{ fontSize: '32px', fontWeight: 600 }}>
+                  ₹{user.referralWalletBalance.toLocaleString('en-IN')}
+                </span>
+                <span style={{ fontSize: '13px', color: 'var(--pos)' }}>
+                  Today +₹{user.todayReferralIncome.toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {/* Active Capital Strategy Card */}
+          <section className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--accent-text)' }}>
+                <Icon d={ICONS.trip} size={20} />
+                <span style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text)' }}>Active Staked Strategy</span>
+              </div>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: 'var(--pos)',
+                background: 'rgba(94, 224, 168, 0.12)',
+                padding: '2px 8px',
+                borderRadius: '6px'
+              }}>
+                VIP Active
+              </span>
+            </div>
+            <div className="num" style={{ fontSize: '32px', fontWeight: 600 }}>
+              ₹{user.activeInvestedAmount.toLocaleString('en-IN')}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--muted)' }}>
+              <span>Fixed Return: <strong style={{ color: 'var(--pos)' }}>0.45% / 24h</strong></span>
+              <span>Tier: <strong>Gold Unicorn</strong></span>
+            </div>
+          </section>
+        </div>
+
+        {/* Right Column: Transaction History Card matching Unicorn_Mobile_App.html Screen 13 */}
+        <section className="card" style={{ flex: '1 1 440px', minWidth: 0, padding: '8px 24px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0 8px' }}>
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Transaction history</h2>
+            <button
+              onClick={() => navigateTo('transactions')}
+              style={{
+                fontSize: '14px',
+                color: 'var(--accent-text)',
+                fontWeight: 500,
+                minHeight: '44px',
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer'
+              }}
+            >
+              See all
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {recentTxns.map((t) => {
+              const iconD = t.type === 'deposit'
+                ? ICONS.deposit
+                : t.type === 'roi'
+                ? ICONS.invest
+                : t.type === 'referral'
+                ? ICONS.referral
+                : ICONS.wallet;
+
+              const isPositive = t.amountFormatted.startsWith('+');
+
+              return (
+                <div
+                  key={t.id}
+                  onClick={() => navigateTo('transactions')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '14px',
+                    padding: '14px 0',
+                    borderTop: '1px solid var(--divider)',
+                    minHeight: '72px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '50%',
+                    background: 'var(--icon-bg)',
+                    color: 'var(--accent-text)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flex: 'none'
+                  }}>
+                    <Icon d={iconD} size={20} />
+                  </div>
+
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                    <span style={{ fontSize: '15px', fontWeight: 500 }}>{t.title}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{t.sub} · {t.date}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                    <span
+                      className="num"
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 600,
+                        color: isPositive ? 'var(--pos)' : 'var(--text)'
+                      }}
+                    >
+                      {t.amountFormatted}
+                    </span>
+                    <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{t.status}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+
+      {/* Internal Wallet Transfer Modal */}
+      {showTransferModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          zIndex: 9999
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '420px',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: '24px',
+            padding: '28px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '18px',
+            boxShadow: 'var(--shadow)'
+          }}>
+            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>Internal Wallet Transfer</h3>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--muted)' }}>
+              Transfer your earned ROI or Referral income directly to your Main Deposit wallet to reinvest in packages.
+            </p>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setTransferFrom('roi')}
+                className={`wal ${transferFrom === 'roi' ? 'on' : ''}`}
+                style={{ padding: '14px' }}
+              >
+                <span style={{ fontSize: '12px' }}>From ROI Wallet</span>
+                <span className="num" style={{ fontSize: '16px', fontWeight: 700 }}>
+                  ₹{user.roiWalletBalance.toLocaleString('en-IN')}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTransferFrom('ref')}
+                className={`wal ${transferFrom === 'ref' ? 'on' : ''}`}
+                style={{ padding: '14px' }}
+              >
+                <span style={{ fontSize: '12px' }}>From Referral Wallet</span>
+                <span className="num" style={{ fontSize: '16px', fontWeight: 700 }}>
+                  ₹{user.referralWalletBalance.toLocaleString('en-IN')}
+                </span>
+              </button>
+            </div>
+
+            <form onSubmit={handleTransferSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '13px', color: 'var(--muted)' }}>Transfer Amount</label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: 'var(--surface2)',
+                  border: '1px solid var(--border2)',
+                  borderRadius: '12px',
+                  padding: '4px 14px'
+                }}>
+                  <span className="num" style={{ fontSize: '18px', color: 'var(--muted)', marginRight: '6px' }}>₹</span>
+                  <input
+                    type="number"
+                    value={transferAmount}
+                    onChange={(e) => setTransferAmount(e.target.value)}
+                    placeholder="Enter amount"
+                    className="num"
+                    required
+                    style={{
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      outline: 'none',
+                      fontSize: '18px',
+                      color: 'var(--text)',
+                      padding: '8px 0'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowTransferModal(false)}
+                  className="btns"
+                  style={{ flex: 1, height: '48px' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btnp btnw"
+                  style={{ flex: 1, height: '48px' }}
+                >
+                  <span className="gt">Confirm Transfer</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
