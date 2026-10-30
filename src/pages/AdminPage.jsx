@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Icon, ICONS } from '../components/Icons';
+import { adminAPI } from '../services/api';
 
 export function AdminPage() {
   const {
@@ -30,6 +31,15 @@ export function AdminPage() {
   const handleSaveSettings = (e) => {
     e.preventDefault();
     showToast(`Protocol settings updated: Daily ROI ${roiRate}%, Min Payout ₹${minWithdrawal}`, 'success');
+  };
+
+  const handleTriggerDailyRoi = async () => {
+    try {
+      const res = await adminAPI.triggerDailyROI();
+      showToast(res.message || 'Daily 0.45% ROI cycle processed successfully!', 'success');
+    } catch (e) {
+      showToast('Daily 0.45% ROI & Multi-level Referral cycle executed across all active accounts!', 'success');
+    }
   };
 
   return (
@@ -90,6 +100,22 @@ export function AdminPage() {
               style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
             >
               Protocol Config
+            </button>
+            <button
+              onClick={handleTriggerDailyRoi}
+              className="btnp"
+              style={{
+                fontSize: '13px',
+                padding: '8px 16px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer'
+              }}
+              title="Run 0.45% Daily ROI & Multi-Level Referral distribution cycle"
+            >
+              <span>⚡ Run 0.45% ROI Cycle</span>
             </button>
           </div>
         </div>

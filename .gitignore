@@ -14,6 +14,11 @@ dist-ssr/
 .env.test.local
 .env.production.local
 
+# Local database files
+server/data/
+*.db
+*.sqlite
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
