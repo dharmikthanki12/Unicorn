@@ -10,3 +10,4 @@ router.post('/withdraw', authenticateUser, walletController.submitWithdrawal);
 router.post('/transfer', authenticateUser, walletController.transferToMainWallet);
 
 module.exports = router;
+

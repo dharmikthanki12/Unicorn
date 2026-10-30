@@ -90,3 +90,4 @@ export const adminAPI = {
   rejectWithdrawal: (id) => request(`/admin/withdrawals/${id}/reject`, { method: 'POST' }),
   triggerDailyROI: () => request('/admin/roi/trigger', { method: 'POST' })
 };
+

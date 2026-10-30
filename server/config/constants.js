@@ -152,3 +152,4 @@ module.exports = {
     contractAddress: '0x86ff73998b5A4dE1E90bEb8415F1560B05efF377'
   }
 };
+

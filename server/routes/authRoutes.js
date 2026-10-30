@@ -11,3 +11,4 @@ router.post('/reset-password', authController.resetPassword);
 router.post('/web3-wallet', authenticateUser, authController.updateWeb3Wallet);
 
 module.exports = router;
+

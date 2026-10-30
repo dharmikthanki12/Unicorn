@@ -8,3 +8,4 @@ router.post('/invest', authenticateUser, investController.investPackage);
 router.get('/my-investments', authenticateUser, investController.getUserInvestments);
 
 module.exports = router;
+
