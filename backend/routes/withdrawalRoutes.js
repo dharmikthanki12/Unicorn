@@ -11,3 +11,4 @@ router.post('/', withdrawalController.submitWithdrawal);
 router.get('/my', withdrawalController.getMyWithdrawals);
 
 module.exports = router;
+

@@ -9,3 +9,4 @@ router.get('/balances', walletController.getWalletBalances);
 router.post('/transfer', walletController.transferToMainWallet);
 
 module.exports = router;
+

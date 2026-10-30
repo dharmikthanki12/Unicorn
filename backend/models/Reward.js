@@ -38,3 +38,4 @@ const rewardSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.models.Reward || mongoose.model('Reward', rewardSchema);
+

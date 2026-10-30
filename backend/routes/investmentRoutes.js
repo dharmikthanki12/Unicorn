@@ -9,3 +9,4 @@ router.post('/', investmentController.createInvestment);
 router.get('/my', investmentController.getMyInvestments);
 
 module.exports = router;
+

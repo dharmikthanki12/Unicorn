@@ -8,3 +8,4 @@ router.use(protect);
 router.get('/my', rewardController.getMyRewards);
 
 module.exports = router;
+

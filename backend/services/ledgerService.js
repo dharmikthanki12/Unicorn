@@ -182,3 +182,4 @@ exports.finalizeWithdrawal = async (userId, walletType, amount) => {
 };
 
 exports.getOrCreateWallet = getOrCreateWallet;
+

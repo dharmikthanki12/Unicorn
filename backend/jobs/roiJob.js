@@ -14,6 +14,13 @@ async function runDailyRoiJob() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Check if weekend pause is enabled (Monday to Friday trading days)
+  const isWeekend = today.getDay() === 0 || today.getDay() === 6;
+  if (process.env.WEEKEND_PAUSE_ENABLED === 'true' && isWeekend) {
+    console.log('[ROI Job] Weekend Pause active (Sat/Sun). Trading resumes Monday.');
+    return { processedCount: 0, totalRoiPaid: 0, paused: true, reason: 'Weekend Pause' };
+  }
+
   let totalRoiPaid = 0;
   let processedCount = 0;
 
@@ -68,3 +75,4 @@ async function runDailyRoiJob() {
 module.exports = {
   runDailyRoiJob
 };
+

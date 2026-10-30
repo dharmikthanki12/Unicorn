@@ -1,6 +1,6 @@
 const { ethers } = require('ethers');
 
-const BSC_RPC = process.env.BSC_RPC_URL || 'https://bsc-dataseed.binance.org/';
+const BSC_RPC = process.env.RPC_URL || process.env.BSC_RPC_URL || 'https://data-seed-prebsc-1-s1.binance.org:8545/';
 let provider = null;
 
 try {
@@ -8,6 +8,9 @@ try {
 } catch (e) {
   console.warn('[Blockchain Service] Provider initialization notice:', e.message);
 }
+
+const UNC_TOKEN = process.env.UNC_TOKEN_ADDRESS || '0x82f9A1498C71e84C21a50B2026BEP20UNC';
+const USDT_TOKEN = process.env.USDT_BEP20_ADDRESS || '0x337610d27c682E347C9cD60BE4B3b107C9d34dDd';
 
 // ERC20/BEP20 minimal ABI for balance & transfer checking
 const BEP20_ABI = [
@@ -80,3 +83,4 @@ exports.getTokenInfo = async (tokenAddress) => {
     return { name: 'Unicorn', symbol: 'UNC', decimals: 18, totalSupply: '100000000' };
   }
 };
+

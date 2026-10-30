@@ -11,3 +11,4 @@ router.put('/change-password', userController.changePassword);
 router.post('/wallet-address', userController.updateWalletAddress);
 
 module.exports = router;
+

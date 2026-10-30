@@ -75,3 +75,4 @@ const investmentSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.models.Investment || mongoose.model('Investment', investmentSchema);
+

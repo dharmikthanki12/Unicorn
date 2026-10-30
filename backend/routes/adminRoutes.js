@@ -43,3 +43,4 @@ router.patch('/packages/:id/status', packageController.toggleStatus);
 router.post('/roi/trigger', adminController.triggerDailyRoiCycle);
 
 module.exports = router;
+

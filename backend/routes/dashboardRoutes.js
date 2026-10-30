@@ -8,3 +8,4 @@ router.use(protect);
 router.get('/data', dashboardController.getDashboardData);
 
 module.exports = router;
+

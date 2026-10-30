@@ -54,3 +54,4 @@ try {
   console.error('❌ Error during verification:', e);
   process.exit(1);
 }
+

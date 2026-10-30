@@ -38,3 +38,4 @@ const referralSchema = new mongoose.Schema({
 referralSchema.index({ sponsorId: 1, downlineId: 1 }, { unique: true });
 
 module.exports = mongoose.models.Referral || mongoose.model('Referral', referralSchema);
+

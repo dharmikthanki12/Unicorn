@@ -71,3 +71,4 @@ const withdrawalSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.models.Withdrawal || mongoose.model('Withdrawal', withdrawalSchema);
+

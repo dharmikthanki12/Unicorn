@@ -32,3 +32,4 @@ const rankSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.models.Rank || mongoose.model('Rank', rankSchema);
+

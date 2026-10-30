@@ -53,3 +53,4 @@ exports.sendWithdrawalOtpEmail = async (email, otpCode) => {
     text
   });
 };
+

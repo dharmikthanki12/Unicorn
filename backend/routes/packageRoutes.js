@@ -6,3 +6,4 @@ router.get('/', packageController.getPackages);
 router.get('/:id', packageController.getPackageById);
 
 module.exports = router;
+

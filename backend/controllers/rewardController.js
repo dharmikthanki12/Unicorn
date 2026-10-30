@@ -51,3 +51,4 @@ exports.getMyRewards = async (req, res, next) => {
     next(error);
   }
 };
+
