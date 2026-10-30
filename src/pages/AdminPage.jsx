@@ -5,18 +5,51 @@ import { adminAPI } from '../services/api';
 
 export function AdminPage() {
   const {
+    user,
     adminRequests,
     approveAdminRequest,
     rejectAdminRequest,
     packages,
-    showToast
+    showToast,
+    navigateTo,
+    openLoginModal
   } = useApp();
+
+  const isAdmin = Boolean(user && (user.role === 'admin' || user.role === 'ADMIN'));
 
   const [activeTab, setActiveTab] = useState('requests');
   const [filterType, setFilterType] = useState('all');
   const [roiRate, setRoiRate] = useState('0.45');
   const [minWithdrawal, setMinWithdrawal] = useState('1000');
   const [kycRequired, setKycRequired] = useState(true);
+
+  if (!isAdmin) {
+    return (
+      <div style={{ maxWidth: '520px', margin: '40px auto', width: '100%', textAlign: 'center', padding: '40px 24px' }} className="card">
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🛡️</div>
+        <h2 style={{ margin: '0 0 8px 0', fontSize: '22px', color: '#ef4444' }}>Admin Access Restricted</h2>
+        <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: 1.6, marginBottom: '24px' }}>
+          This console is strictly reserved for UNICORN platform administrators. If you are an administrator, please sign in with your administrative credentials.
+        </p>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => navigateTo('home')}
+            className="btno"
+            style={{ padding: '10px 20px', fontSize: '14px' }}
+          >
+            Return to Dashboard
+          </button>
+          <button
+            onClick={openLoginModal}
+            className="btnp"
+            style={{ padding: '10px 20px', fontSize: '14px' }}
+          >
+            Admin Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const pendingRequests = adminRequests.filter(r => {
     const matchesStatus = r.status === 'Pending';

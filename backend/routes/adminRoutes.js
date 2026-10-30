@@ -16,31 +16,61 @@ router.use(adminOnly);
 router.get('/metrics', adminController.getAdminMetrics);
 router.get('/audit-logs', adminController.getAuditLogs);
 
-// Users Management
+// 1. Users Management
 router.get('/users', adminController.getAllUsers);
+router.patch('/users/:id', adminController.updateUserStatus);
 router.patch('/users/:id/status', adminController.updateUserStatus);
 
-// Deposits Review
-router.get('/deposits', depositController.getAllDeposits);
+// 2. Packages Management
+router.get('/packages', adminController.getAllPackages);
+router.post('/packages', adminController.createPackage);
+router.patch('/packages/:id', adminController.updatePackage);
+router.put('/packages/:id', adminController.updatePackage);
+
+// 3. Deposits Review
+router.get('/deposits', adminController.getAllDeposits);
+router.patch('/deposits/:id', adminController.updateDeposit);
+router.post('/deposits/:id/approve', depositController.approveDeposit);
 router.patch('/deposits/:id/approve', depositController.approveDeposit);
+router.post('/deposits/:id/reject', depositController.rejectDeposit);
 router.patch('/deposits/:id/reject', depositController.rejectDeposit);
 
-// Withdrawals Review
-router.get('/withdrawals', withdrawalController.getAllWithdrawals);
+// 4. Withdrawals Review
+router.get('/withdrawals', adminController.getAllWithdrawals);
+router.patch('/withdrawals/:id', adminController.updateWithdrawal);
+router.post('/withdrawals/:id/approve', withdrawalController.approveWithdrawal);
 router.patch('/withdrawals/:id/approve', withdrawalController.approveWithdrawal);
+router.post('/withdrawals/:id/reject', withdrawalController.rejectWithdrawal);
 router.patch('/withdrawals/:id/reject', withdrawalController.rejectWithdrawal);
+router.post('/withdrawals/:id/mark-paid', withdrawalController.markPaid);
 router.patch('/withdrawals/:id/mark-paid', withdrawalController.markPaid);
 
-// Investment Records Review
+// 5. Referral Rewards Management
+router.get('/referral-rewards', adminController.getAllReferralRewards);
+router.patch('/referral-rewards/:id', adminController.updateReferralReward);
+
+// 6. Rank Rewards Management
+router.get('/rank-rewards', adminController.getAllRankRewards);
+router.patch('/rank-rewards/:id', adminController.updateRankReward);
+
+// 7. Achiever Bonuses Management
+router.get('/achiever-bonuses', adminController.getAllAchieverBonuses);
+router.patch('/achiever-bonuses/:id', adminController.updateAchieverBonus);
+
+// 8. Reports
+router.get('/reports/financial', adminController.getFinancialReport);
+router.get('/reports', adminController.getFinancialReport);
+
+// 9. Platform Settings
+router.get('/settings', adminController.getPlatformSettings);
+router.post('/settings', adminController.updatePlatformSettings);
+router.patch('/settings', adminController.updatePlatformSettings);
+
+// 10. Investments
 router.get('/investments', investmentController.getAllInvestments);
 
-// Packages Management
-router.post('/packages', packageController.createPackage);
-router.put('/packages/:id', packageController.updatePackage);
-router.patch('/packages/:id/status', packageController.toggleStatus);
-
-// Trigger Manual 0.45% Daily ROI Cycle
+// 11. Trigger Manual 0.45% Daily ROI Cycle
 router.post('/roi/trigger', adminController.triggerDailyRoiCycle);
+router.post('/trigger-roi', adminController.triggerDailyRoiCycle);
 
 module.exports = router;
-

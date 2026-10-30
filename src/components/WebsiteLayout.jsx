@@ -4,6 +4,8 @@ import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { BottomNav } from './BottomNav';
 import { TwoFactorModal } from './TwoFactorModal';
+import { AuthModal } from './AuthModal';
+import { WalletModal } from './WalletModal';
 import { Toast } from './Toast';
 
 export function WebsiteLayout({ children }) {
@@ -27,6 +29,8 @@ export function WebsiteLayout({ children }) {
 
       {/* Global Modals & Notifications */}
       <TwoFactorModal />
+      <AuthModal />
+      <WalletModal />
       <Toast />
     </div>
   );

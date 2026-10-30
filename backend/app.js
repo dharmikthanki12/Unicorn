@@ -64,12 +64,16 @@ app.get('/api/health', (req, res) => {
 // 6. Mount API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/investments', investmentRoutes);
+app.use('/api/invest', investmentRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/wallets', walletRoutes);
 app.use('/api/deposits', depositRoutes);
 app.use('/api/withdrawals', withdrawalRoutes);
 app.use('/api/referrals', referralRoutes);
+app.use('/api/referral', referralRoutes);
 app.use('/api/rewards', rewardRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/dashboard', dashboardRoutes);

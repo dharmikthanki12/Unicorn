@@ -37,10 +37,9 @@ async function runDailyRoiJob() {
     const user = await User.findById(inv.userId);
     if (!user || user.status !== 'active') continue;
 
-    // Use precise integer arithmetic (in INR rupees or cents)
-    const calculationBase = Number(inv.amount);
-    const rate = Number(inv.dailyRoiRate || 0.0045);
-    const calculatedAmount = Math.round(calculationBase * rate);
+    // Use precise integer arithmetic (no floating-point math): (Principal * 45) / 10000
+    const calculationBase = Math.round(Number(inv.amount));
+    const calculatedAmount = Math.floor((calculationBase * 45) / 10000);
 
     if (calculatedAmount <= 0) continue;
 

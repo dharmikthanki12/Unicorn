@@ -1,0 +1,235 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "UNICORN Web3 Protocol API",
+    "version": "1.0.0",
+    "description": "Enterprise-grade REST API for UNICORN Web3 investment, ROI distribution, multi-level referral commissions, rank rewards, achiever trip qualifications, BEP-20 token integration, and administration."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 6 },
+                  "phone": { "type": "string" },
+                  "referralCode": { "type": "string" },
+                  "walletAddress": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created with access and refresh tokens" },
+          "400": { "description": "Validation or duplicate error" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login with email & password",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Authenticated successfully" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "summary": "Refresh access token using refresh token",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["refreshToken"],
+                "properties": {
+                  "refreshToken": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "New access and refresh tokens issued" }
+        }
+      }
+    },
+    "/auth/wallet/nonce": {
+      "post": {
+        "summary": "Generate Web3 authentication nonce for wallet",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["walletAddress"],
+                "properties": {
+                  "walletAddress": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Cryptographic nonce generated" }
+        }
+      }
+    },
+    "/auth/wallet/verify": {
+      "post": {
+        "summary": "Verify Web3 wallet signature and authenticate user",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["walletAddress", "signature"],
+                "properties": {
+                  "walletAddress": { "type": "string" },
+                  "signature": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Web3 signature verified" }
+        }
+      }
+    },
+    "/packages": {
+      "get": {
+        "summary": "List all active investment packages",
+        "tags": ["Investments"],
+        "responses": {
+          "200": { "description": "Array of 7 investment packages" }
+        }
+      }
+    },
+    "/investments": {
+      "post": {
+        "summary": "Activate an investment package",
+        "tags": ["Investments"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["packageId"],
+                "properties": {
+                  "packageId": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Package activated; daily ROI starts next cycle" }
+        }
+      },
+      "get": {
+        "summary": "Get authenticated user active investments",
+        "tags": ["Investments"],
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/wallets": {
+      "get": {
+        "summary": "Get user wallets (MAIN and REFERRAL)",
+        "tags": ["Wallets"],
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/withdrawals/verify-2fa": {
+      "post": {
+        "summary": "Verify 2FA TOTP or email OTP strictly at withdrawal",
+        "tags": ["Withdrawals"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["otp"],
+                "properties": {
+                  "otp": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/withdrawals/request": {
+      "post": {
+        "summary": "Submit withdrawal request after 2FA verification",
+        "tags": ["Withdrawals"],
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/admin/settings": {
+      "get": {
+        "summary": "Read platform financial parameters and ambiguous rule configurations",
+        "tags": ["Administration"],
+        "security": [{ "BearerAuth": [] }]
+      },
+      "patch": {
+        "summary": "Update platform rules and policy configuration",
+        "tags": ["Administration"],
+        "security": [{ "BearerAuth": [] }]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
+

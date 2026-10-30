@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   INITIAL_USER,
+  ADMIN_USER,
   INVESTMENT_PACKAGES,
   REFERRAL_LEVEL_TIERS,
   RANK_REWARD_BONUSES,
@@ -10,6 +11,7 @@ import {
   INITIAL_NOTIFICATIONS,
   INITIAL_ADMIN_PENDING_REQUESTS
 } from '../data/mockData';
+import { authAPI, setStoredToken, clearStoredToken } from '../services/api';
 
 const AppContext = createContext();
 
@@ -29,10 +31,45 @@ export function AppProvider({ children }) {
 
   const initial = loadInitial();
 
+  const getInitialUser = () => {
+    // If a phantom 'Web3 Investor' account was stored from old wallet connection logic, discard it
+    if (initial?.user && (initial.user.name === 'Web3 Investor' || initial.user.initials === 'W3')) {
+      return null;
+    }
+    // Only restore user if an active authenticated session exists in localStorage
+    if (initial?.user && initial.user.id) {
+      return {
+        ...initial.user,
+        role: initial.user.role || (initial.user.email?.toLowerCase().includes('admin') || initial.user.id?.includes('ADMIN') ? 'admin' : 'user'),
+        web3Connected: Boolean(initial.user.web3Connected),
+        web3Address: initial.user.web3Address || ''
+      };
+    }
+    // By default, a new visitor is NOT logged in and views the Landing Page
+    return null;
+  };
+
+  const getInitialScreen = () => {
+    // If user is logged in, show 'home'; if new or logged out, show 'landing'
+    const initUser = getInitialUser();
+    if (initUser) {
+      return initial?.activeScreen && initial.activeScreen !== 'landing' ? initial.activeScreen : 'home';
+    }
+    return 'landing';
+  };
+
   const [theme, setTheme] = useState(initial?.theme || 'dark');
-  const [activeScreen, setActiveScreen] = useState('home');
-  const [screenHistory, setScreenHistory] = useState(['home']);
+  const [activeScreen, setActiveScreen] = useState(getInitialScreen);
+  const [screenHistory, setScreenHistory] = useState([getInitialScreen()]);
   const [viewportMode, setViewportMode] = useState('phone'); // 'phone' | 'expanded'
+
+  // Independent Web3 Wallet State (MetaMask / BEP-20)
+  const [web3Address, setWeb3Address] = useState(() => {
+    return initial?.web3Address || (initial?.user?.name !== 'Web3 Investor' ? initial?.user?.web3Address : '') || '';
+  });
+  const [web3Connected, setWeb3Connected] = useState(() => {
+    return Boolean(initial?.web3Connected || (initial?.user?.name !== 'Web3 Investor' ? initial?.user?.web3Connected : false));
+  });
   
   // Helper to ensure packages always have complete schema even if loaded from older localStorage
   const getInitialPackages = () => {
@@ -52,7 +89,7 @@ export function AppProvider({ children }) {
   };
 
   // User & Balances
-  const [user, setUser] = useState(initial?.user || INITIAL_USER);
+  const [user, setUser] = useState(getInitialUser);
   const [packages, setPackages] = useState(getInitialPackages);
   const [transactions, setTransactions] = useState(initial?.transactions || INITIAL_TRANSACTIONS);
   const [team, setTeam] = useState(initial?.team || INITIAL_TEAM);
@@ -71,12 +108,197 @@ export function AppProvider({ children }) {
   const [pendingWithdrawData, setPendingWithdrawData] = useState(null);
   const [twoFactorOtpCode, setTwoFactorOtpCode] = useState('839214');
 
+  // Auth Modal (Login / Register) state
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+
+  const openLoginModal = () => {
+    setAuthMode('login');
+    setIsAuthModalOpen(true);
+  };
+
+  const openRegisterModal = () => {
+    setAuthMode('register');
+    setIsAuthModalOpen(true);
+  };
+
+  const closeAuthModal = () => {
+    setIsAuthModalOpen(false);
+  };
+
+  const login = async (email, password) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    try {
+      const res = await authAPI.login({ email: cleanEmail, password }).catch(() => null);
+      if (res && res.user) {
+        if (res.token || res.accessToken) setStoredToken(res.token || res.accessToken);
+        const backendAddr = res.user.walletAddress || res.user.web3Address || '';
+        const backendConnected = Boolean(res.user.web3Connected || backendAddr);
+        const loggedUser = {
+          ...INITIAL_USER,
+          ...res.user,
+          initials: res.user.name ? res.user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'U',
+          role: res.user.role || (cleanEmail.includes('admin') ? 'admin' : 'user'),
+          web3Connected: backendConnected,
+          web3Address: backendAddr
+        };
+        setUser(loggedUser);
+        if (backendAddr) {
+          setWeb3Address(backendAddr);
+          setWeb3Connected(backendConnected);
+        }
+        showToast(`Welcome back, ${loggedUser.name}!`);
+        setIsAuthModalOpen(false);
+        setActiveScreen('home');
+        setScreenHistory(['home']);
+        return true;
+      }
+    } catch (e) {
+      console.warn('Backend login fallback:', e.message);
+    }
+
+    // Demo / Offline Simulation Login
+    if (cleanEmail.includes('admin')) {
+      setUser(ADMIN_USER);
+      showToast('Logged in as UNICORN Super Admin');
+    } else {
+      const investorUser = {
+        ...INITIAL_USER,
+        email: cleanEmail || INITIAL_USER.email,
+        name: cleanEmail === INITIAL_USER.email ? INITIAL_USER.name : cleanEmail.split('@')[0].toUpperCase(),
+        initials: cleanEmail === INITIAL_USER.email ? 'RM' : cleanEmail.slice(0, 2).toUpperCase(),
+        role: 'user',
+        web3Connected: false,
+        web3Address: ''
+      };
+      setUser(investorUser);
+      showToast(`Logged in successfully as Investor (${investorUser.name})`);
+    }
+    setIsAuthModalOpen(false);
+    setActiveScreen('home');
+    setScreenHistory(['home']);
+    return true;
+  };
+
+  const logout = () => {
+    clearStoredToken();
+    setUser(null);
+    showToast('Logged out successfully.');
+    setActiveScreen('landing');
+    setScreenHistory(['landing']);
+  };
+
+  const createFreshUser = (name, cleanEmail, apiUser = null, sponsorRef = '') => {
+    const cleanId = (apiUser?.id || apiUser?._id)
+      ? `UNC-${String(apiUser.id || apiUser._id).slice(-5).toUpperCase()}`
+      : `UNC-${Math.floor(10000 + Math.random() * 90000)}`;
+    const referralCode = apiUser?.referralCode || `UNC${Math.floor(1000 + Math.random() * 9000)}`;
+    const initials = name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'UN';
+
+    return {
+      id: cleanId,
+      name: name.trim(),
+      email: cleanEmail,
+      phone: apiUser?.phone || '',
+      initials,
+      role: 'user',
+      rank: 'Starter Unicorn',     // Clean initial rank (not Gold Unicorn!)
+      kycStatus: 'UNVERIFIED',     // Brand new account is UNVERIFIED!
+      kycDocumentId: '',
+      kycDocumentType: '',
+      twoFactorEnabled: false,
+      twoFactorSecret: '',
+      web3Connected: Boolean(web3Connected),
+      web3Address: web3Address || '',
+      referralCode,
+      referralLink: `unicorn.vip/?ref=${referralCode}`,
+      sponsor: sponsorRef ? `Sponsor: ${sponsorRef}` : 'None (Direct)',
+      bankDetails: null,           // No hardcoded bank details!
+      
+      // Balances strictly 0 for new user
+      mainWalletBalance: 0,
+      roiWalletBalance: 0,
+      referralWalletBalance: 0,
+      
+      // Stats strictly 0
+      activeInvestedAmount: 0,
+      todayRoiIncome: 0,
+      todayReferralIncome: 0,
+      directBusiness: 0,
+      teamBusiness: 0,
+      totalDirects: 0,
+      joinedDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    };
+  };
+
+  const register = async (name, email, password, referralCode) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    try {
+      const res = await authAPI.register({ name, email: cleanEmail, password, referralCode }).catch(() => null);
+      if (res && res.user) {
+        if (res.token || res.accessToken) setStoredToken(res.token || res.accessToken);
+        const newUser = createFreshUser(name, cleanEmail, res.user, referralCode);
+        setUser(newUser);
+        setTransactions([]); // Clear old mock transactions for new user!
+        showToast(`Welcome to UNICORN, ${name}!`);
+        setIsAuthModalOpen(false);
+        setActiveScreen('home');
+        setScreenHistory(['home']);
+        return true;
+      }
+    } catch (e) {
+      console.warn('Backend register fallback:', e.message);
+    }
+
+    const newUser = createFreshUser(name, cleanEmail, null, referralCode);
+    setUser(newUser);
+    setTransactions([]); // Clear old mock transactions for new user!
+    showToast(`Account registered successfully for ${name}!`);
+    setIsAuthModalOpen(false);
+    setActiveScreen('home');
+    setScreenHistory(['home']);
+    return true;
+  };
+
+  const updateBankDetails = (details) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        bankDetails: {
+          accountHolder: details.accountHolder || prev.name,
+          bankName: details.bankName || '',
+          accountNumber: details.accountNumber || '',
+          ifsc: details.ifsc || '',
+          upiId: details.upiId || ''
+        }
+      };
+    });
+    showToast('Bank and UPI payout details updated successfully!');
+  };
+
+  const submitKyc = (documentType, documentId) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        kycStatus: 'PENDING',
+        kycDocumentType: documentType,
+        kycDocumentId: documentId,
+        kycSubmittedDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      };
+    });
+    showToast('KYC documents submitted successfully! Status: Under Review.');
+  };
+
   // Sync to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         theme,
         user,
+        web3Address,
+        web3Connected,
         packages,
         transactions,
         team,
@@ -86,7 +308,7 @@ export function AppProvider({ children }) {
     } catch (e) {
       console.error('Storage error:', e);
     }
-  }, [theme, user, packages, transactions, team, notifications, adminRequests]);
+  }, [theme, user, web3Address, web3Connected, packages, transactions, team, notifications, adminRequests]);
 
   // Apply theme to html data-theme
   useEffect(() => {
@@ -102,6 +324,10 @@ export function AppProvider({ children }) {
 
   // Screen Navigation
   const navigateTo = (screenName) => {
+    if (screenName === 'admin' && (!user || (user.role !== 'admin' && user.role !== 'ADMIN'))) {
+      showToast('Access restricted: Only administrators can access the Admin Console.', 'error');
+      return;
+    }
     setScreenHistory(prev => [...prev, screenName]);
     setActiveScreen(screenName);
   };
@@ -135,39 +361,234 @@ export function AppProvider({ children }) {
     showToast('Platform reset to default state');
   };
 
-  // Web3 Wallet Connect / Disconnect
-  const connectWeb3Wallet = async () => {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        if (accounts.length > 0) {
-          setUser(prev => ({
-            ...prev,
-            web3Connected: true,
-            web3Address: accounts[0]
-          }));
-          showToast(`Connected Web3 Wallet: ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`);
-          return;
-        }
-      } catch (err) {
-        console.warn('User rejected web3 or error:', err);
-      }
+  // Web3 Provider Helpers (Direct MetaMask Integration)
+  const getMetaMaskProvider = () => {
+    if (typeof window === 'undefined' || !window.ethereum) return null;
+    if (window.ethereum.providers && Array.isArray(window.ethereum.providers)) {
+      const mm = window.ethereum.providers.find(p => p.isMetaMask && !p.isPhantom && !p.isBraveWallet);
+      if (mm) return mm;
+      return window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum;
     }
-    // Simulation fallback
-    const mockAddr = '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-    setUser(prev => ({
-      ...prev,
-      web3Connected: true,
-      web3Address: mockAddr
-    }));
-    showToast(`Connected BEP-20 Wallet: ${mockAddr.slice(0, 6)}...${mockAddr.slice(-4)}`);
+    return window.ethereum;
   };
 
-  const disconnectWeb3Wallet = () => {
-    setUser(prev => ({
-      ...prev,
-      web3Connected: false
-    }));
+  const BSC_CHAIN_CONFIG = {
+    chainId: '0x61', // 97 in hex (BNB Smart Chain Testnet)
+    chainName: 'BNB Smart Chain Testnet',
+    nativeCurrency: { name: 'tBNB', symbol: 'tBNB', decimals: 18 },
+    rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545/'],
+    blockExplorerUrls: ['https://testnet.bscscan.com']
+  };
+
+  const ensureBscNetwork = async (provider) => {
+    if (!provider || !provider.request) return;
+    try {
+      await provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x61' }]
+      });
+    } catch (err) {
+      if (err.code === 4902) {
+        try {
+          await provider.request({
+            method: 'wallet_addEthereumChain',
+            params: [BSC_CHAIN_CONFIG]
+          });
+        } catch (addErr) {
+          console.warn('Network add notice:', addErr);
+        }
+      }
+    }
+  };
+
+  // Web3 Wallet Modal & Connection Handlers
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const openWalletModal = () => setIsWalletModalOpen(true);
+  const closeWalletModal = () => setIsWalletModalOpen(false);
+
+  // Real-time MetaMask event synchronization (accountsChanged, chainChanged)
+  useEffect(() => {
+    const provider = getMetaMaskProvider();
+    if (!provider || !provider.on) return;
+
+    const handleAccountsChanged = async (accounts) => {
+      if (accounts && accounts.length > 0) {
+        const newAddr = accounts[0];
+        setWeb3Address(newAddr);
+        setWeb3Connected(true);
+
+        setUser(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            web3Connected: true,
+            web3Address: newAddr
+          };
+        });
+
+        try {
+          await authAPI.updateWeb3Wallet(newAddr, true).catch(() => null);
+        } catch (e) {
+          console.warn('Backend sync warning:', e);
+        }
+
+        showToast(`MetaMask Active Account: ${newAddr.slice(0, 6)}...${newAddr.slice(-4)}`);
+      } else {
+        setWeb3Address('');
+        setWeb3Connected(false);
+        setUser(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            web3Connected: false,
+            web3Address: ''
+          };
+        });
+
+        try {
+          await authAPI.updateWeb3Wallet('', false).catch(() => null);
+        } catch (e) {
+          console.warn('Backend sync warning:', e);
+        }
+
+        showToast('MetaMask disconnected');
+      }
+    };
+
+    const handleChainChanged = () => {
+      window.location.reload();
+    };
+
+    provider.on('accountsChanged', handleAccountsChanged);
+    provider.on('chainChanged', handleChainChanged);
+
+    return () => {
+      if (provider.removeListener) {
+        provider.removeListener('accountsChanged', handleAccountsChanged);
+        provider.removeListener('chainChanged', handleChainChanged);
+      }
+    };
+  }, [user]);
+
+  const connectWeb3MetaMask = async () => {
+    closeWalletModal();
+    const provider = getMetaMaskProvider();
+
+    if (!provider) {
+      const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+        const dappUrl = window.location.href.replace(/^https?:\/\//, '');
+        showToast('Redirecting to MetaMask App...', 'info');
+        window.location.href = `https://metamask.app.link/dapp/${dappUrl}`;
+      } else {
+        showToast('Redirecting to MetaMask download...', 'info');
+        window.open('https://metamask.io/download/', '_blank');
+      }
+      return;
+    }
+
+    try {
+      showToast('Redirecting to MetaMask... Please approve connection.');
+      const accounts = await provider.request({ method: 'eth_requestAccounts' });
+      if (accounts && accounts.length > 0) {
+        const addr = accounts[0];
+        
+        // Ensure user is on BNB Smart Chain
+        await ensureBscNetwork(provider).catch(() => null);
+
+        setWeb3Address(addr);
+        setWeb3Connected(true);
+
+        if (user) {
+          setUser(prev => (prev ? {
+            ...prev,
+            web3Connected: true,
+            web3Address: addr
+          } : null));
+
+          // Sync with backend database
+          try {
+            await authAPI.updateWeb3Wallet(addr, true).catch(() => null);
+          } catch (syncErr) {
+            console.warn('Backend Web3 wallet sync notice:', syncErr);
+          }
+        }
+        showToast(`MetaMask Connected: ${addr.slice(0, 6)}...${addr.slice(-4)}`);
+        return addr;
+      }
+    } catch (err) {
+      if (err.code === 4001) {
+        showToast('MetaMask connection request rejected by user.', 'error');
+      } else {
+        showToast(`MetaMask: ${err.message || 'Could not connect'}`, 'error');
+      }
+    }
+  };
+
+  const connectWeb3Demo = async () => {
+    closeWalletModal();
+    const mockAddr = '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    setWeb3Address(mockAddr);
+    setWeb3Connected(true);
+    // If a user is already signed in, update their account; NEVER synthesize a dummy user!
+    if (user) {
+      setUser(prev => (prev ? {
+        ...prev,
+        web3Connected: true,
+        web3Address: mockAddr
+      } : null));
+
+      // Sync with backend database
+      try {
+        await authAPI.updateWeb3Wallet(mockAddr, true).catch(() => null);
+      } catch (syncErr) {
+        console.warn('Backend Web3 wallet sync notice:', syncErr);
+      }
+    }
+    showToast(`Instant Test BEP-20 Wallet Connected: ${mockAddr.slice(0, 6)}...${mockAddr.slice(-4)}`);
+  };
+
+  const connectWeb3Wallet = async () => {
+    const provider = getMetaMaskProvider();
+    const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    // 1. Mobile devices: Redirect directly to MetaMask mobile app via official universal link
+    if (isMobile && !provider) {
+      const dappUrl = window.location.href.replace(/^https?:\/\//, '');
+      showToast('Redirecting to MetaMask Mobile App...', 'info');
+      window.location.href = `https://metamask.app.link/dapp/${dappUrl}`;
+      return;
+    }
+
+    // 2. Desktop with MetaMask extension: Connect immediately!
+    if (provider) {
+      await connectWeb3MetaMask();
+      return;
+    }
+
+    // 3. Desktop without extension: Redirect to MetaMask download page directly
+    showToast('Redirecting to MetaMask download...', 'info');
+    window.open('https://metamask.io/download/', '_blank');
+    openWalletModal();
+  };
+
+  const disconnectWeb3Wallet = async () => {
+    setWeb3Address('');
+    setWeb3Connected(false);
+    if (user) {
+      setUser(prev => (prev ? {
+        ...prev,
+        web3Connected: false,
+        web3Address: ''
+      } : null));
+
+      // Sync with backend database
+      try {
+        await authAPI.updateWeb3Wallet('', false).catch(() => null);
+      } catch (syncErr) {
+        console.warn('Backend Web3 wallet sync notice:', syncErr);
+      }
+    }
     showToast('Web3 Wallet disconnected');
   };
 
@@ -498,13 +919,31 @@ export function AppProvider({ children }) {
         twoFactorOtpCode,
         pendingWithdrawData,
         transferFunds,
+        web3Address,
+        web3Connected,
         connectWeb3Wallet,
         disconnectWeb3Wallet,
+        isWalletModalOpen,
+        openWalletModal,
+        closeWalletModal,
+        connectWeb3MetaMask,
+        connectWeb3Demo,
+        updateBankDetails,
+        submitKyc,
         approveAdminRequest,
         rejectAdminRequest,
         resetToDefaults,
         toast,
         showToast,
+        isAuthModalOpen,
+        openLoginModal,
+        openRegisterModal,
+        closeAuthModal,
+        authMode,
+        setAuthMode,
+        login,
+        logout,
+        register,
         referralTiers: REFERRAL_LEVEL_TIERS,
         rankBonuses: RANK_REWARD_BONUSES,
         achieverBonuses: ACHIEVER_BONUSES

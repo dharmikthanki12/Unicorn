@@ -39,11 +39,49 @@ const withdrawalSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  walletType: {
+    type: String,
+    enum: ['roi', 'referral', 'MAIN', 'REFERRAL', 'ROI', 'main'],
+    default: function() { return this.walletSource || 'roi'; }
+  },
+  amountINR: {
+    type: Number,
+    default: function() { return this.amount; }
+  },
+  feeINR: {
+    type: Number,
+    default: function() { return this.feeAmount || 0; }
+  },
+  netAmountINR: {
+    type: Number,
+    default: function() { return this.netAmount; }
+  },
+  destination: {
+    type: String,
+    default: function() { return this.destinationAddress; }
+  },
+  is2faVerified: {
+    type: Boolean,
+    default: function() { return this.twoFactorVerified; }
+  },
+  adminRemark: {
+    type: String,
+    default: function() { return this.adminNotes || ''; }
+  },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected', 'paid'],
+    enum: ['pending', 'approved', 'rejected', 'paid', 'PENDING', 'APPROVED', 'REJECTED', 'COMPLETED', 'PAID'],
     default: 'pending',
     index: true
+  },
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: function() { return this.reviewedBy; }
+  },
+  rejectionReason: {
+    type: String,
+    default: function() { return this.adminNotes || ''; }
   },
   txHash: {
     type: String,

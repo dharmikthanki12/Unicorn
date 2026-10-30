@@ -56,6 +56,26 @@ const packageSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'inactive'],
     default: 'active'
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  investmentINR: {
+    type: Number,
+    default: function() { return this.amount; }
+  },
+  referenceUSD: {
+    type: Number,
+    default: function() { return this.usdValue; }
+  },
+  roiConfigRef: {
+    type: String,
+    default: 'DEFAULT_0.45'
+  },
+  durationDays: {
+    type: Number,
+    default: 365
   }
 }, {
   timestamps: true

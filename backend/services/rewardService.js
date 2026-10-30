@@ -9,7 +9,7 @@ const RANK_TARGETS = [
   { target: 1000000, bonus: 20000, rankName: 'Gold Executive' },
   { target: 2500000, bonus: 45000, rankName: 'Diamond Director' },
   { target: 5000000, bonus: 100000, rankName: 'Crown Ambassador' },
-  { target: 10000000, bonusRate: 0.03, fixedBonus: 300000, rankName: 'Unicorn Legend' }
+  { target: 10000000, bonus: 300000, bonusRate: 0.03, percentage: 0.03, fixedBonus: 300000, rankName: 'Unicorn Legend' }
 ];
 
 const ACHIEVER_TRIPS = [

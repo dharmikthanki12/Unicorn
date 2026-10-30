@@ -9,9 +9,14 @@ export function Navbar() {
     theme,
     toggleTheme,
     user,
+    web3Connected,
+    web3Address,
     connectWeb3Wallet,
     disconnectWeb3Wallet,
-    notifications
+    notifications,
+    openLoginModal,
+    openRegisterModal,
+    logout
   } = useApp();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -19,6 +24,9 @@ export function Navbar() {
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
 
   const unreadCount = notifications.filter(n => n.unread).length;
+  const isAdmin = Boolean(user && (user.role === 'admin' || user.role === 'ADMIN'));
+  const isWalletConnected = Boolean(user?.web3Connected || web3Connected);
+  const currentWalletAddress = user?.web3Address || web3Address || '';
 
   // Exact 8 navigation items in exact order matching media_1793268197280_a5eddc20.png
   const navLinks = [
@@ -31,6 +39,20 @@ export function Navbar() {
     { id: 'tokenomics', label: 'UNC', subLabel: 'Token', icon: ICONS.trip, isMulti: true },
     { id: 'admin', label: 'Admin', icon: ICONS.settings, isMulti: false }
   ];
+
+  const guestNavLinks = [
+    { id: 'landing', label: 'Overview', icon: ICONS.home, isMulti: false },
+    { id: 'invest', label: 'Invest', subLabel: 'Packages', icon: ICONS.invest, isMulti: true },
+    { id: 'tokenomics', label: 'UNC', subLabel: 'Token', icon: ICONS.trip, isMulti: true }
+  ];
+
+  // For logged-in members, show full app navigation; for visitors, show landing overview
+  const visibleNavLinks = user
+    ? navLinks.filter(item => {
+        if (item.id === 'admin') return isAdmin;
+        return true;
+      })
+    : guestNavLinks;
 
   const handleNav = (id) => {
     navigateTo(id);
@@ -51,9 +73,9 @@ export function Navbar() {
       <div className="website-nav-container">
         {/* Left: Brand Logo + UNICORN [BEP-20] + Subtitle */}
         <div
-          onClick={() => handleNav('home')}
+          onClick={() => handleNav(user ? 'home' : 'landing')}
           className="navbar-brand-btn"
-          title="Go to Dashboard"
+          title={user ? 'Go to Dashboard' : 'Go to Overview'}
         >
           {/* Logo Card with white rounded box & smooth shadow */}
           <div className="navbar-logo-card">
@@ -81,7 +103,7 @@ export function Navbar() {
 
         {/* Center: Main Nav Links matching media_1793268197280_a5eddc20.png */}
         <nav className="desktop-nav-links" aria-label="Main Navigation">
-          {navLinks.map((item) => {
+          {visibleNavLinks.map((item) => {
             const active = isNavActive(item.id);
             return (
               <button
@@ -167,24 +189,26 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Web3 Connected Wallet Pill */}
-          <button
-            onClick={user.web3Connected ? disconnectWeb3Wallet : connectWeb3Wallet}
-            className="navbar-wallet-btn"
-            title={user.web3Connected ? 'Click to Disconnect' : 'Connect BEP-20 Wallet'}
-          >
-            <span
-              style={{
-                width: '7px',
-                height: '7px',
-                borderRadius: '50%',
-                background: user.web3Connected ? 'var(--pos)' : '#8F94AB'
-              }}
-            />
-            {user.web3Connected
-              ? `${user.web3Address.slice(0, 6)}...${user.web3Address.slice(-4)}`
-              : 'Connect Wallet'}
-          </button>
+          {/* Web3 Connected Wallet Pill — ONLY visible when logged in to Dashboard/App */}
+          {user && (
+            <button
+              onClick={isWalletConnected ? disconnectWeb3Wallet : connectWeb3Wallet}
+              className="navbar-wallet-btn"
+              title={isWalletConnected ? `${currentWalletAddress} (Click to Disconnect)` : 'Connect BEP-20 Wallet'}
+            >
+              <span
+                style={{
+                  width: '7px',
+                  height: '7px',
+                  borderRadius: '50%',
+                  background: isWalletConnected ? 'var(--pos)' : '#8F94AB'
+                }}
+              />
+              {isWalletConnected && currentWalletAddress
+                ? `${currentWalletAddress.slice(0, 6)}...${currentWalletAddress.slice(-4)}`
+                : 'Connect Wallet'}
+            </button>
+          )}
 
           {/* Theme Switcher Button (Desktop & Tablet only; inside drawer on mobile) */}
           <button
@@ -195,80 +219,150 @@ export function Navbar() {
             <Icon d={theme === 'dark' ? ICONS.sun : ICONS.moon} size={18} />
           </button>
 
-          {/* Profile User Avatar Button */}
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => {
-                setProfileDropdownOpen(!profileDropdownOpen);
-                setNotifDropdownOpen(false);
-              }}
-              className="navbar-avatar-btn"
-              aria-label="Open user settings"
-            >
-              {user.initials}
-            </button>
+          {/* User Profile Avatar OR Log In / Sign Up CTA */}
+          {user ? (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => {
+                  setProfileDropdownOpen(!profileDropdownOpen);
+                  setNotifDropdownOpen(false);
+                }}
+                className="navbar-avatar-btn"
+                aria-label="Open user settings"
+              >
+                {user.initials || 'U'}
+              </button>
 
-            {profileDropdownOpen && (
-              <>
-                <div
-                  onClick={() => setProfileDropdownOpen(false)}
-                  style={{ position: 'fixed', inset: 0, zIndex: 1045 }}
-                />
-                <div className="navbar-dropdown-menu navbar-profile-menu">
-                  <div style={{ borderBottom: '1px solid var(--divider)', paddingBottom: '10px' }}>
-                    <strong style={{ fontSize: '14px', display: 'block', color: 'var(--text)' }}>{user.name}</strong>
-                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{user.rank} · ID {user.id}</span>
-                    <div style={{
-                      marginTop: '6px',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      color: 'var(--pos)',
-                      background: 'rgba(94, 224, 168, 0.12)',
-                      padding: '2px 8px',
-                      borderRadius: '6px',
-                      width: 'fit-content'
-                    }}>
-                      ✓ KYC {user.kycStatus}
+              {profileDropdownOpen && (
+                <>
+                  <div
+                    onClick={() => setProfileDropdownOpen(false)}
+                    style={{ position: 'fixed', inset: 0, zIndex: 1045 }}
+                  />
+                  <div className="navbar-dropdown-menu navbar-profile-menu">
+                    <div style={{ borderBottom: '1px solid var(--divider)', paddingBottom: '10px' }}>
+                      <strong style={{ fontSize: '14px', display: 'block', color: 'var(--text)' }}>{user.name}</strong>
+                      <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                        {user.rank || 'Starter Unicorn'} · ID {user.id}
+                      </span>
+                      <div style={{
+                        marginTop: '6px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: user.kycStatus === 'VERIFIED' ? 'var(--pos)' : user.kycStatus === 'PENDING' ? '#F59E0B' : '#EF4444',
+                        background: user.kycStatus === 'VERIFIED' ? 'rgba(94, 224, 168, 0.12)' : user.kycStatus === 'PENDING' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        width: 'fit-content'
+                      }}>
+                        {user.kycStatus === 'VERIFIED' ? '✓ KYC VERIFIED' : user.kycStatus === 'PENDING' ? '⏳ KYC PENDING' : '⚠️ KYC UNVERIFIED'}
+                      </div>
                     </div>
-                  </div>
 
-                  <button
-                    onClick={() => handleNav('profile')}
-                    className="item"
-                    style={{ padding: '8px 10px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
-                  >
-                    <Icon d={ICONS.user} size={16} /> Profile &amp; Settings
-                  </button>
-                  <button
-                    onClick={toggleTheme}
-                    className="item"
-                    style={{ padding: '8px 10px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                  >
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Icon d={theme === 'dark' ? ICONS.sun : ICONS.moon} size={16} /> Mode
-                    </span>
-                    <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 600 }}>
-                      {theme === 'dark' ? 'Dark' : 'Light'}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => handleNav('withdraw')}
-                    className="item"
-                    style={{ padding: '8px 10px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
-                  >
-                    <Icon d={ICONS.wallet} size={16} /> Withdraw (2FA)
-                  </button>
-                  <button
-                    onClick={() => handleNav('admin')}
-                    className="item"
-                    style={{ padding: '8px 10px', borderRadius: '8px', fontSize: '13px', color: '#E072D0', display: 'flex', alignItems: 'center', gap: '8px' }}
-                  >
-                    <Icon d={ICONS.settings} size={16} /> Admin Console
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+                    <button
+                      onClick={() => handleNav('profile')}
+                      className="item"
+                      style={{ padding: '8px 10px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      <Icon d={ICONS.user} size={16} /> Profile &amp; Settings
+                    </button>
+                    <button
+                      onClick={toggleTheme}
+                      className="item"
+                      style={{ padding: '8px 10px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Icon d={theme === 'dark' ? ICONS.sun : ICONS.moon} size={16} /> Mode
+                      </span>
+                      <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 600 }}>
+                        {theme === 'dark' ? 'Dark' : 'Light'}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => handleNav('withdraw')}
+                      className="item"
+                      style={{ padding: '8px 10px', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      <Icon d={ICONS.wallet} size={16} /> Withdraw (2FA)
+                    </button>
+
+                    {/* Admin Console ONLY visible for verified Admin role */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleNav('admin')}
+                        className="item"
+                        style={{ padding: '8px 10px', borderRadius: '8px', fontSize: '13px', color: '#E072D0', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      >
+                        <Icon d={ICONS.settings} size={16} /> Admin Console
+                      </button>
+                    )}
+
+                    <div style={{ borderTop: '1px solid var(--divider)', margin: '4px 0' }} />
+
+                    {/* Log Out CTA in profile menu */}
+                    <button
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
+                        logout();
+                      }}
+                      className="item"
+                      style={{
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        color: '#ef4444',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                      </svg>
+                      Log Out
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={openLoginModal}
+                className="btno"
+                style={{
+                  height: '38px',
+                  padding: '0 16px',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                Log In
+              </button>
+              <button
+                onClick={openRegisterModal}
+                className="btnp btnw"
+                style={{
+                  height: '38px',
+                  padding: '0 18px',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                Get Started
+              </button>
+            </div>
+          )}
 
           {/* Mobile Hamburger Toggle Button */}
           <button
@@ -320,29 +414,31 @@ export function Navbar() {
               animation: 'slideDown 0.2s ease-out'
             }}
           >
-          {/* Web3 Wallet Pill in Drawer */}
-          <button
-            onClick={user.web3Connected ? disconnectWeb3Wallet : connectWeb3Wallet}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '12px 16px',
-              borderRadius: '12px',
-              background: 'var(--surface2)',
-              border: '1px solid var(--border2)',
-              fontSize: '14px',
-              fontWeight: 600,
-              color: user.web3Connected ? 'var(--pos)' : 'var(--text)',
-              cursor: 'pointer',
-              marginBottom: '4px'
-            }}
-          >
-            <span>{user.web3Connected ? 'Connected Wallet' : 'Connect Web3 Wallet'}</span>
-            <span className="num" style={{ fontSize: '13px' }}>
-              {user.web3Connected ? `${user.web3Address.slice(0, 6)}...${user.web3Address.slice(-4)}` : '🦊 MetaMask'}
-            </span>
-          </button>
+          {/* Web3 Wallet Pill in Drawer — ONLY visible when logged in to Dashboard/App */}
+          {user && (
+            <button
+              onClick={isWalletConnected ? disconnectWeb3Wallet : connectWeb3Wallet}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                background: 'var(--surface2)',
+                border: '1px solid var(--border2)',
+                fontSize: '14px',
+                fontWeight: 600,
+                color: isWalletConnected ? 'var(--pos)' : 'var(--text)',
+                cursor: 'pointer',
+                marginBottom: '4px'
+              }}
+            >
+              <span>{isWalletConnected ? 'Connected Wallet' : 'Connect Web3 Wallet'}</span>
+              <span className="num" style={{ fontSize: '13px' }}>
+                {isWalletConnected && currentWalletAddress ? `${currentWalletAddress.slice(0, 6)}...${currentWalletAddress.slice(-4)}` : '🦊 MetaMask'}
+              </span>
+            </button>
+          )}
 
           {/* Theme Switcher in Drawer */}
           <button
@@ -366,8 +462,8 @@ export function Navbar() {
             <span>{theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}</span>
           </button>
 
-          {/* Nav links in drawer */}
-          {navLinks.map((item) => {
+          {/* Nav links in drawer (Admin filtered out for regular users) */}
+          {visibleNavLinks.map((item) => {
             const active = isNavActive(item.id);
             return (
               <button
@@ -392,6 +488,70 @@ export function Navbar() {
               </button>
             );
           })}
+
+          {/* Drawer Auth Button (Log In / Log Out) */}
+          {user ? (
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                logout();
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                background: 'rgba(239, 68, 68, 0.12)',
+                color: '#ef4444',
+                fontWeight: 600,
+                fontSize: '15px',
+                cursor: 'pointer',
+                textAlign: 'left',
+                marginTop: '6px'
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              <span>Log Out ({user.name})</span>
+            </button>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  openRegisterModal();
+                }}
+                className="btnp btnw"
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  fontWeight: 600
+                }}
+              >
+                Create Account (Register)
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  openLoginModal();
+                }}
+                className="btno"
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  fontWeight: 600
+                }}
+              >
+                Sign In
+              </button>
+            </div>
+          )}
         </div>
         </>
       )}

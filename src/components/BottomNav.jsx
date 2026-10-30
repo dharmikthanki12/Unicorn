@@ -3,7 +3,9 @@ import { useApp } from '../context/AppContext';
 import { Icon, ICONS } from './Icons';
 
 export function BottomNav() {
-  const { activeScreen, navigateTo } = useApp();
+  const { activeScreen, navigateTo, user } = useApp();
+
+  if (activeScreen === 'landing' || !user) return null;
 
   const tabs = [
     { id: 'home', label: 'Dashboard', icon: ICONS.home },

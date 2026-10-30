@@ -7,14 +7,22 @@ const transactionSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  walletId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Wallet',
+    default: null
+  },
   walletType: {
     type: String,
-    enum: ['main', 'roi', 'referral', 'unc'],
+    enum: ['main', 'roi', 'referral', 'unc', 'MAIN', 'REFERRAL'],
     required: true
   },
   type: {
     type: String,
-    enum: ['deposit', 'withdrawal', 'invest', 'roi_credit', 'referral_bonus', 'rank_reward', 'transfer', 'refund'],
+    enum: [
+      'deposit', 'withdrawal', 'invest', 'roi_credit', 'referral_bonus', 'rank_reward', 'transfer', 'refund',
+      'DEPOSIT', 'WITHDRAWAL', 'INVEST', 'ROI', 'REFERRAL', 'RANK_REWARD', 'TRANSFER', 'REFUND'
+    ],
     required: true,
     index: true
   },
@@ -22,9 +30,23 @@ const transactionSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  amountINR: {
+    type: Number,
+    default: function() { return this.amount; }
+  },
+  amountUNC: {
+    type: Number,
+    default: 0
+  },
+  idempotencyKey: {
+    type: String,
+    unique: true,
+    sparse: true,
+    index: true
+  },
   amountFormatted: {
     type: String,
-    required: true
+    default: function() { return `₹${this.amount ? this.amount.toLocaleString('en-IN') : 0}`; }
   },
   entryType: {
     type: String,

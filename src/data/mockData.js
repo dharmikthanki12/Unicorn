@@ -7,12 +7,13 @@ export const INITIAL_USER = {
   initials: 'RM',
   email: 'rutajeet@unicorn.io',
   phone: '+91 98765 43210',
+  role: 'user', // Normal investor user: Admin options are hidden
   rank: 'Gold Unicorn',
   kycStatus: 'VERIFIED', // 'VERIFIED' | 'PENDING' | 'UNVERIFIED'
   twoFactorEnabled: true,
   twoFactorSecret: 'UNICORN-2FA-SEC-88294',
-  web3Connected: true,
-  web3Address: '0x71C5A869d2319fBc9057bA27218Ac9bB38A9',
+  web3Connected: false,
+  web3Address: '',
   referralCode: 'UNC88294',
   referralLink: 'https://unicorn.io/join?ref=UNC88294',
   sponsor: 'UNC-70012 (Arjun K.)',
@@ -30,6 +31,35 @@ export const INITIAL_USER = {
   teamBusiness: 8500000,        // For Rank Reward Bonus
   totalDirects: 4,              // Number of direct active referrals
   joinedDate: '12 Sep 2026',
+};
+
+// Super Admin User Profile
+export const ADMIN_USER = {
+  id: 'UNC-ADMIN',
+  name: 'UNICORN Super Admin',
+  initials: 'AD',
+  email: 'admin@unicorn.vip',
+  phone: '+91 99999 99999',
+  role: 'admin', // Admin user: Has full access to Admin Console & management tools
+  rank: 'Diamond Executive',
+  kycStatus: 'VERIFIED',
+  twoFactorEnabled: true,
+  twoFactorSecret: 'UNICORN-ADMIN-2FA-99999',
+  web3Connected: false,
+  web3Address: '',
+  referralCode: 'UNCADMIN',
+  referralLink: 'https://unicorn.io/join?ref=UNCADMIN',
+  sponsor: 'None (Genesis Root)',
+  mainWalletBalance: 1000000,
+  roiWalletBalance: 250000,
+  referralWalletBalance: 180000,
+  activeInvestedAmount: 5000000,
+  todayRoiIncome: 22500,
+  todayReferralIncome: 8500,
+  directBusiness: 25000000,
+  teamBusiness: 100000000,
+  totalDirects: 18,
+  joinedDate: '01 Jan 2026',
 };
 
 // Investment Packages from PDF Section 2 & template

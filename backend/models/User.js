@@ -42,23 +42,56 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
+    enum: ['user', 'admin', 'super_admin', 'USER', 'ADMIN', 'SUPER_ADMIN'],
     default: 'user'
   },
   status: {
     type: String,
-    enum: ['active', 'suspended', 'pending'],
+    enum: ['active', 'suspended', 'pending', 'ACTIVE', 'SUSPENDED', 'PENDING'],
     default: 'active'
   },
   kycStatus: {
     type: String,
-    enum: ['Verified', 'Pending', 'Unverified'],
+    enum: ['Verified', 'Pending', 'Unverified', 'VERIFIED', 'PENDING', 'UNVERIFIED'],
     default: 'Verified'
+  },
+  sponsorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
   },
   walletAddress: {
     type: String,
     trim: true,
     default: ''
+  },
+  walletNonce: {
+    type: String,
+    default: () => Math.floor(100000 + Math.random() * 900000).toString()
+  },
+  nonce: {
+    type: String,
+    default: function() { return this.walletNonce; }
+  },
+  passwordHash: {
+    type: String,
+    default: function() { return this.password; }
+  },
+  twoFactorSecret: {
+    type: String,
+    default: null
+  },
+  twoFactorEnabled: {
+    type: Boolean,
+    default: false
+  },
+  refreshToken: {
+    type: String,
+    default: null
+  },
+  lastLoginAt: {
+    type: Date,
+    default: null
   },
   web3Connected: {
     type: Boolean,
@@ -92,14 +125,13 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Pre-save password hashing
-userSchema.pre('save', async function (next) {
+// Pre-save password hashing (Mongoose 8/9 async hook without next callback)
+userSchema.pre('save', async function () {
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 // Compare password method

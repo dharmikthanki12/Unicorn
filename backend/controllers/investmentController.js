@@ -82,6 +82,22 @@ exports.getMyInvestments = async (req, res, next) => {
   }
 };
 
+// 2b. Get Investment by ID
+exports.getInvestmentById = async (req, res, next) => {
+  try {
+    const investment = await Investment.findById(req.params.id);
+    if (!investment) {
+      return next(new ApiError(404, 'Investment not found.'));
+    }
+    res.json({
+      success: true,
+      investment
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // 3. Admin: Get All Platform Investments
 exports.getAllInvestments = async (req, res, next) => {
   try {

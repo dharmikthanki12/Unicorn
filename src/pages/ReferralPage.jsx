@@ -3,12 +3,14 @@ import { useApp } from '../context/AppContext';
 import { Icon, ICONS } from '../components/Icons';
 
 export function ReferralPage() {
-  const { user, team, referralTiers, rankBonuses, achieverBonuses, showToast } = useApp();
+  const { user, team, referralTiers, rankBonuses, achieverBonuses, showToast, navigateTo } = useApp();
   const [selectedLevel, setSelectedLevel] = useState(1);
   const [extraView, setExtraView] = useState('summary'); // 'summary' | 'ranks' | 'trips'
   const [showQrModal, setShowQrModal] = useState(false);
 
-  const referralUrl = `unicorn-neon-theta.vercel.app/?ref=${user.referralCode}`;
+  const referralCode = user?.referralCode || 'UNC-88294';
+  const referralUrl = `unicorn.vip/?ref=${referralCode}`;
+  const isActivated = Boolean(user && (Number(user.activeInvestedAmount || 0) > 0 || user.isReferralActivated || user.role === 'admin'));
 
   const handleCopyLink = () => {
     navigator.clipboard?.writeText(referralUrl);
@@ -16,7 +18,7 @@ export function ReferralPage() {
   };
 
   const handleShare = (platform) => {
-    const text = `Join Unicorn Web3 Investment Platform with my referral code ${user.referralCode}: https://${referralUrl}`;
+    const text = `Join Unicorn Web3 Investment Platform with my referral code ${referralCode}: https://${referralUrl}`;
     if (platform === 'whatsapp') {
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     } else if (platform === 'telegram') {
@@ -38,8 +40,8 @@ export function ReferralPage() {
   const members = team[selectedLevel] || [];
   const currentTier = referralTiers.find(t => t.level === selectedLevel) || {
     level: selectedLevel,
-    rate: selectedLevel === 1 ? '10%' : selectedLevel === 2 ? '5%' : selectedLevel === 3 ? '4%' : selectedLevel === 4 ? '3%' : selectedLevel === 5 ? '2%' : '1%',
-    minDirects: selectedLevel <= 2 ? 2 : selectedLevel <= 4 ? 3 : 4
+    rate: selectedLevel === 1 ? '5%' : selectedLevel <= 5 ? '2%' : selectedLevel <= 10 ? '1%' : selectedLevel <= 25 ? '0.25%' : '0.125%',
+    minDirects: selectedLevel === 1 ? 2 : selectedLevel <= 5 ? 4 : selectedLevel <= 10 ? 7 : selectedLevel <= 25 ? 12 : 15
   };
 
   const getInitials = (name) => {
@@ -63,7 +65,7 @@ export function ReferralPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '14px', color: 'var(--muted)' }}>Your referral link</span>
               <span className="num" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent-text)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: '6px' }}>
-                CODE: {user.referralCode}
+                CODE: {referralCode}
               </span>
             </div>
 
@@ -120,20 +122,20 @@ export function ReferralPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <span style={{ fontSize: '16px', fontWeight: 600 }}>Andaman achiever trip</span>
               <span className="num" style={{ fontSize: '14px', color: 'var(--muted)' }}>
-                ₹{(user.directBusiness / 100000).toFixed(1)}L / ₹15L
+                ₹{((user?.directBusiness || 0) / 100000).toFixed(1)}L / ₹15L
               </span>
             </div>
             <div
               role="progressbar"
               aria-valuemin="0"
               aria-valuemax="100"
-              aria-valuenow={Math.min(100, Math.round((user.directBusiness / 1500000) * 100))}
+              aria-valuenow={Math.min(100, Math.round(((user?.directBusiness || 0) / 1500000) * 100))}
               aria-label="Direct volume progress"
               style={{ height: '10px', borderRadius: '5px', background: 'var(--border)', overflow: 'hidden' }}
             >
               <div
                 style={{
-                  width: `${Math.min(100, Math.max(12, Math.round((user.directBusiness / 1500000) * 100)))}%`,
+                  width: `${Math.min(100, Math.max(12, Math.round(((user?.directBusiness || 0) / 1500000) * 100)))}%`,
                   height: '100%',
                   background: 'var(--grad)',
                   borderRadius: '5px',
@@ -142,7 +144,7 @@ export function ReferralPage() {
               />
             </div>
             <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
-              Direct volume needed to unlock the Andaman pass (₹{Math.max(0, 1500000 - user.directBusiness).toLocaleString('en-IN')} remaining)
+              Direct volume needed to unlock the Andaman pass (₹{Math.max(0, 1500000 - (user?.directBusiness || 0)).toLocaleString('en-IN')} remaining)
             </span>
           </section>
 
@@ -271,96 +273,136 @@ export function ReferralPage() {
         <section className="card" style={{ flex: '1 1 440px', minWidth: 0, padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>My team</h2>
 
-          {/* Level Filter Chips */}
-          <div role="group" aria-label="Team level" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {levelList.map(lvl => (
+          {!isActivated ? (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              padding: '36px 16px',
+              gap: '16px'
+            }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                background: 'rgba(181, 92, 169, 0.12)',
+                color: 'var(--accent-text)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '28px'
+              }}>
+                🔒
+              </div>
+              <div>
+                <h3 style={{ margin: '0 0 6px 0', fontSize: '18px' }}>Activate Your Referral Account</h3>
+                <p style={{ margin: 0, fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                  Invest in any package (starting from ₹10,000) to activate your downline team hierarchy, unlock multi-tier generation overrides (up to 5% daily ROI-on-ROI), and qualify for Achiever travel passes.
+                </p>
+              </div>
               <button
-                key={lvl}
-                onClick={() => setSelectedLevel(lvl)}
-                className={`chip ${selectedLevel === lvl ? 'on' : ''}`}
-                aria-pressed={selectedLevel === lvl}
+                onClick={() => navigateTo('invest')}
+                className="btnp"
+                style={{ height: '44px', padding: '0 24px', fontSize: '14px', fontWeight: 600 }}
               >
-                Level {lvl}
+                Activate by Investing
               </button>
-            ))}
-          </div>
-
-          {/* Level Commission Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', color: 'var(--muted)' }}>
-            <span>Level {selectedLevel} Downline</span>
-            <span className="num" style={{ color: 'var(--text)', fontWeight: 600 }}>
-              {currentTier.rate} ROI-on-ROI
-            </span>
-          </div>
-
-          {/* Downline Member Cards */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {members.length > 0 ? (
-              members.map((m, idx) => (
-                <div
-                  key={m.id || idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '14px',
-                    padding: '12px 0',
-                    borderTop: '1px solid var(--divider)',
-                    minHeight: '64px'
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      background: 'var(--icon-bg)',
-                      color: 'var(--accent-text)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 600,
-                      fontSize: '14px',
-                      flex: 'none'
-                    }}
+            </div>
+          ) : (
+            <>
+              {/* Level Filter Chips */}
+              <div role="group" aria-label="Team level" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {levelList.map(lvl => (
+                  <button
+                    key={lvl}
+                    onClick={() => setSelectedLevel(lvl)}
+                    className={`chip ${selectedLevel === lvl ? 'on' : ''}`}
+                    aria-pressed={selectedLevel === lvl}
                   >
-                    {getInitials(m.name)}
-                  </div>
+                    Level {lvl}
+                  </button>
+                ))}
+              </div>
 
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '15px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {m.name}
-                      </span>
-                      {m.package && (
-                        <span style={{ fontSize: '10px', background: 'var(--surface2)', border: '1px solid var(--border)', padding: '1px 6px', borderRadius: '4px', color: 'var(--muted)' }}>
-                          {m.package}
-                        </span>
-                      )}
-                    </div>
-                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                      Joined {m.joined} {m.myCommission ? `· ${m.myCommission}` : ''}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 }}>
-                    <span className="num" style={{ fontSize: '14px', fontWeight: 600 }}>
-                      {m.active}
-                    </span>
-                    <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
-                      Active capital
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: '14px', borderTop: '1px solid var(--divider)' }}>
-                <p style={{ margin: 0 }}>No direct members enrolled at Level {selectedLevel} yet.</p>
-                <span style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                  Share your referral link with your community to activate Level {selectedLevel} rewards!
+              {/* Level Commission Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', color: 'var(--muted)' }}>
+                <span>Level {selectedLevel} Downline</span>
+                <span className="num" style={{ color: 'var(--text)', fontWeight: 600 }}>
+                  {currentTier.rate} ROI-on-ROI
                 </span>
               </div>
-            )}
-          </div>
+
+              {/* Downline Member Cards */}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {members.length > 0 ? (
+                  members.map((m, idx) => (
+                    <div
+                      key={m.id || idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '14px',
+                        padding: '12px 0',
+                        borderTop: '1px solid var(--divider)',
+                        minHeight: '64px'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          background: 'var(--icon-bg)',
+                          color: 'var(--accent-text)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 600,
+                          fontSize: '14px',
+                          flex: 'none'
+                        }}
+                      >
+                        {getInitials(m.name)}
+                      </div>
+
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '15px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {m.name}
+                          </span>
+                          {m.package && (
+                            <span style={{ fontSize: '10px', background: 'var(--surface2)', border: '1px solid var(--border)', padding: '1px 6px', borderRadius: '4px', color: 'var(--muted)' }}>
+                              {m.package}
+                            </span>
+                          )}
+                        </div>
+                        <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                          Joined {m.joined} {m.myCommission ? `· ${m.myCommission}` : ''}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 }}>
+                        <span className="num" style={{ fontSize: '14px', fontWeight: 600 }}>
+                          {m.active}
+                        </span>
+                        <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                          Active capital
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: '14px', borderTop: '1px solid var(--divider)' }}>
+                    <p style={{ margin: 0 }}>No direct members enrolled at Level {selectedLevel} yet.</p>
+                    <span style={{ fontSize: '12px', display: 'block', marginTop: '4px' }}>
+                      Share your referral link with your community to activate Level {selectedLevel} rewards!
+                    </span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </section>
       </div>
 

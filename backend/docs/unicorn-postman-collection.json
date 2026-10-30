@@ -1,0 +1,334 @@
+{
+  "info": {
+    "name": "UNICORN Web3 Protocol — 7 Operational Lifecycle Flows",
+    "description": "Complete Postman API Collection to test all 7 lifecycle flows: Auth & Web3, Deposits, Staking, Daily ROI & Multi-Level Referral Yield, Rank & Achiever Milestones, 2FA Withdrawals, and Admin Governance.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api", "type": "string" },
+    { "key": "authToken", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Flow 1: Onboarding & Web3 Authentication",
+      "item": [
+        {
+          "name": "1.1 Register User (with Sponsor Code)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vikram Patel\",\n  \"email\": \"vikram@unicorn.vip\",\n  \"password\": \"InvestorPass2026!\",\n  \"phone\": \"+91 9876543210\",\n  \"referralCode\": \"UNCADMIN\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register" }
+          }
+        },
+        {
+          "name": "1.2 Login with Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) { pm.collectionVariables.set('authToken', jsonData.token); }",
+                  "if (jsonData.refreshToken) { pm.collectionVariables.set('refreshToken', jsonData.refreshToken); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"vikram@unicorn.vip\",\n  \"password\": \"InvestorPass2026!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login" }
+          }
+        },
+        {
+          "name": "1.3 Refresh Access Token (Token Rotation)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/refresh" }
+          }
+        },
+        {
+          "name": "1.4 Request Web3 Auth Nonce",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"walletAddress\": \"0x71C8416620593520F02A2920801a280240E61612\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/wallet/nonce" }
+          }
+        },
+        {
+          "name": "1.5 Get Authenticated Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/user/profile" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 2: Deposits & Capital Funding",
+      "item": [
+        {
+          "name": "2.1 Submit Deposit (INR via UPI UTR)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100000,\n  \"currency\": \"INR\",\n  \"paymentMethod\": \"UPI\",\n  \"transactionReference\": \"UTR987654321098\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/deposits" }
+          }
+        },
+        {
+          "name": "2.2 Submit Deposit (USDT BEP-20 TxHash)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 250000,\n  \"currency\": \"USDT\",\n  \"paymentMethod\": \"USDT (BEP-20)\",\n  \"blockchainTxHash\": \"0x8a9b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/deposits" }
+          }
+        },
+        {
+          "name": "2.3 View User Deposits",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/deposits" }
+          }
+        },
+        {
+          "name": "2.4 Admin Approve Deposit",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/deposits/{{depositId}}/approve" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 3: Investment Staking & Package Activation",
+      "item": [
+        {
+          "name": "3.1 List All Active Packages (Tier 1-7)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/packages" }
+          }
+        },
+        {
+          "name": "3.2 Activate Package (Basic Growth ₹50,000)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"packageId\": \"basic\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/investments" }
+          }
+        },
+        {
+          "name": "3.3 View Active User Stakes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/investments" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 4: Daily ROI & Multi-Level Referral Yield",
+      "item": [
+        {
+          "name": "4.1 Trigger Manual Daily 0.45% ROI Cycle (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/trigger-roi" }
+          }
+        },
+        {
+          "name": "4.2 Get Referral Network Overview & Directs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/referrals" }
+          }
+        },
+        {
+          "name": "4.3 Get Recursive Downline Referral Tree",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/user/referral-tree" }
+          }
+        },
+        {
+          "name": "4.4 Get Total Earnings Breakdown",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/user/earnings" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 5: Rank Rewards & 4-Month Achiever Trips",
+      "item": [
+        {
+          "name": "5.1 Get Rank Rewards Milestones & History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/rewards/rank" }
+          }
+        },
+        {
+          "name": "5.2 Get Achiever Trips Status (within 4 Months)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/rewards/achiever" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 6: Withdrawals with Mandatory TOTP 2FA",
+      "item": [
+        {
+          "name": "6.1 Request 2FA OTP Code",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/withdrawals/request-otp" }
+          }
+        },
+        {
+          "name": "6.2 Verify 2FA TOTP or Email OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"123456\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/withdrawals/verify-2fa" }
+          }
+        },
+        {
+          "name": "6.3 Submit Withdrawal Request (Locks Funds in reservedWithdrawal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000,\n  \"walletSource\": \"roi\",\n  \"payoutMethod\": \"upi\",\n  \"destinationAddress\": \"investor@okhdfcbank\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/withdrawals/request" }
+          }
+        },
+        {
+          "name": "6.4 Admin Mark Withdrawal Paid (Finalizes Ledger)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txHash\": \"0x8a9b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/withdrawals/{{withdrawalId}}/mark-paid" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flow 7: Admin Governance & Platform Settings",
+      "item": [
+        {
+          "name": "7.1 Get Live Admin Console Metrics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/metrics" }
+          }
+        },
+        {
+          "name": "7.2 Get Platform Settings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/settings" }
+          }
+        },
+        {
+          "name": "7.3 Update Platform Settings (ROI, Minimums, Weekend Toggle)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dailyRoiRate\": 0.0045,\n  \"minWithdrawal\": 500,\n  \"weekendPauseEnabled\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/settings" }
+          }
+        },
+        {
+          "name": "7.4 View Immutable Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/admin/audit-logs" }
+          }
+        }
+      ]
+    }
+  ]
+}
+

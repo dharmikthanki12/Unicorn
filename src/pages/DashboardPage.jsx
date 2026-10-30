@@ -3,15 +3,41 @@ import { useApp } from '../context/AppContext';
 import { Icon, ICONS } from '../components/Icons';
 
 export function DashboardPage() {
-  const { user, transactions, navigateTo, transferFunds, showToast } = useApp();
+  const {
+    user,
+    transactions,
+    navigateTo,
+    transferFunds,
+    showToast,
+    openLoginModal,
+    openRegisterModal,
+    web3Connected,
+    web3Address,
+    connectWeb3Wallet,
+    disconnectWeb3Wallet
+  } = useApp();
+
+  const isWalletConnected = Boolean(user?.web3Connected || web3Connected);
+  const currentWalletAddress = user?.web3Address || web3Address || '';
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferFrom, setTransferFrom] = useState('roi');
   const [transferAmount, setTransferAmount] = useState('');
 
   const recentTxns = transactions.slice(0, 5);
 
+  const mainWalletBalance = user?.mainWalletBalance ?? 0;
+  const roiWalletBalance = user?.roiWalletBalance ?? 0;
+  const referralWalletBalance = user?.referralWalletBalance ?? 0;
+  const todayRoiIncome = user?.todayRoiIncome ?? 0;
+  const todayReferralIncome = user?.todayReferralIncome ?? 0;
+  const activeInvestedAmount = user?.activeInvestedAmount ?? 0;
+
   const handleTransferSubmit = (e) => {
     e.preventDefault();
+    if (!user) {
+      openLoginModal();
+      return;
+    }
     if (!transferAmount || Number(transferAmount) <= 0) {
       showToast('Enter valid transfer amount', 'error');
       return;
@@ -23,6 +49,38 @@ export function DashboardPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      {!user && (
+        <div
+          className="card"
+          style={{
+            background: 'linear-gradient(135deg, rgba(181,92,169,0.18), rgba(76,140,245,0.18))',
+            border: '1px solid rgba(181,92,169,0.3)',
+            padding: '20px 24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px',
+            borderRadius: '16px'
+          }}
+        >
+          <div>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Welcome to UNICORN Platform</h3>
+            <p style={{ margin: '4px 0 0', color: 'var(--muted)', fontSize: '13px' }}>
+              Earn 0.45% daily yields on active packages, build your multi-level referral network, and qualify for Achiever trips.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={openLoginModal} className="btnp" style={{ padding: '8px 20px', fontSize: '13px', fontWeight: 600 }}>
+              Log In
+            </button>
+            <button onClick={openRegisterModal} className="btno" style={{ padding: '8px 20px', fontSize: '13px', fontWeight: 600 }}>
+              Register
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 2-Column Responsive Home Layout matching Unicorn_Mobile_App.html Screen 13 */}
       <div className="website-grid-2col" style={{ display: 'flex', flexWrap: 'wrap', gap: '32px', alignItems: 'flex-start' }}>
         {/* Left Column: Wallet Balance Hero, Buttons & Income Cards */}
@@ -39,7 +97,7 @@ export function DashboardPage() {
                 letterSpacing: '-0.03em'
               }}
             >
-              ₹{user.mainWalletBalance.toLocaleString('en-IN')}
+              ₹{mainWalletBalance.toLocaleString('en-IN')}
             </span>
             <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
               Main deposit wallet · ready to invest
@@ -81,6 +139,142 @@ export function DashboardPage() {
             </button>
           </div>
 
+          {/* Web3 BEP-20 Wallet Connectivity Card */}
+          {user && (
+            <div
+              className="card"
+              style={{
+                padding: '16px 20px',
+                borderRadius: '16px',
+                border: isWalletConnected ? '1px solid rgba(94, 224, 168, 0.35)' : '1px solid var(--border)',
+                background: isWalletConnected
+                  ? 'linear-gradient(135deg, rgba(94, 224, 168, 0.08), rgba(181, 92, 169, 0.06))'
+                  : 'var(--surface2)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '20px' }}>🦊</span>
+                  <div>
+                    <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text)', display: 'block' }}>
+                      BNB Smart Chain (BEP-20)
+                    </span>
+                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                      Web3 Smart Contract & Payout Rail
+                    </span>
+                  </div>
+                </div>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    padding: '3px 10px',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: isWalletConnected ? 'rgba(94, 224, 168, 0.15)' : 'rgba(143, 148, 171, 0.15)',
+                    color: isWalletConnected ? 'var(--pos)' : 'var(--muted)'
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '7px',
+                      height: '7px',
+                      borderRadius: '50%',
+                      background: isWalletConnected ? 'var(--pos)' : 'var(--muted)'
+                    }}
+                  />
+                  {isWalletConnected ? 'MetaMask Connected' : 'Wallet Not Connected'}
+                </span>
+              </div>
+
+              {isWalletConnected && currentWalletAddress ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border2)',
+                    borderRadius: '10px',
+                    padding: '8px 12px',
+                    gap: '8px'
+                  }}>
+                    <span className="num" style={{ fontSize: '13px', color: 'var(--text)', wordBreak: 'break-all' }}>
+                      {currentWalletAddress}
+                    </span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(currentWalletAddress);
+                        showToast('BEP-20 Wallet address copied!');
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--accent-text)',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        flexShrink: 0
+                      }}
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                    <a
+                      href={`https://testnet.bscscan.com/address/${currentWalletAddress}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: 'var(--muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      View on BscScan ↗
+                    </a>
+                    <button
+                      onClick={disconnectWeb3Wallet}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#ef4444',
+                        fontWeight: 600,
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Disconnect Wallet
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <p style={{ margin: 0, fontSize: '13px', color: 'var(--muted)', maxWidth: '320px' }}>
+                    Connect your MetaMask wallet to enable on-chain USDT deposits and receive direct BEP-20 payouts.
+                  </p>
+                  <button
+                    onClick={connectWeb3Wallet}
+                    className="btnp"
+                    style={{
+                      padding: '8px 18px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <span>🦊 Connect MetaMask</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Income Section */}
           <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Income</h2>
@@ -92,10 +286,10 @@ export function DashboardPage() {
                   <span style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text)' }}>ROI Income</span>
                 </div>
                 <span className="num" style={{ fontSize: '32px', fontWeight: 600 }}>
-                  ₹{user.roiWalletBalance.toLocaleString('en-IN')}
+                  ₹{roiWalletBalance.toLocaleString('en-IN')}
                 </span>
                 <span style={{ fontSize: '13px', color: 'var(--pos)' }}>
-                  Today +₹{user.todayRoiIncome.toLocaleString('en-IN')} (0.45%)
+                  Today +₹{todayRoiIncome.toLocaleString('en-IN')} (0.45%)
                 </span>
               </div>
 
@@ -106,10 +300,10 @@ export function DashboardPage() {
                   <span style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text)' }}>Referral Income</span>
                 </div>
                 <span className="num" style={{ fontSize: '32px', fontWeight: 600 }}>
-                  ₹{user.referralWalletBalance.toLocaleString('en-IN')}
+                  ₹{referralWalletBalance.toLocaleString('en-IN')}
                 </span>
                 <span style={{ fontSize: '13px', color: 'var(--pos)' }}>
-                  Today +₹{user.todayReferralIncome.toLocaleString('en-IN')}
+                  Today +₹{todayReferralIncome.toLocaleString('en-IN')}
                 </span>
               </div>
             </div>
@@ -125,20 +319,20 @@ export function DashboardPage() {
               <span style={{
                 fontSize: '11px',
                 fontWeight: 700,
-                color: 'var(--pos)',
-                background: 'rgba(94, 224, 168, 0.12)',
+                color: activeInvestedAmount > 0 ? 'var(--pos)' : 'var(--accent-text)',
+                background: activeInvestedAmount > 0 ? 'rgba(94, 224, 168, 0.12)' : 'rgba(181, 92, 169, 0.12)',
                 padding: '2px 8px',
                 borderRadius: '6px'
               }}>
-                VIP Active
+                {activeInvestedAmount > 0 ? 'VIP Active' : 'Ready to Deploy'}
               </span>
             </div>
             <div className="num" style={{ fontSize: '32px', fontWeight: 600 }}>
-              ₹{user.activeInvestedAmount.toLocaleString('en-IN')}
+              ₹{activeInvestedAmount.toLocaleString('en-IN')}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--muted)' }}>
               <span>Fixed Return: <strong style={{ color: 'var(--pos)' }}>0.45% / 24h</strong></span>
-              <span>Tier: <strong>Gold Unicorn</strong></span>
+              <span>Tier: <strong>{user?.rank || 'Starter Unicorn'}</strong></span>
             </div>
           </section>
         </div>
@@ -164,66 +358,74 @@ export function DashboardPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {recentTxns.map((t) => {
-              const iconD = t.type === 'deposit'
-                ? ICONS.deposit
-                : t.type === 'roi'
-                ? ICONS.invest
-                : t.type === 'referral'
-                ? ICONS.referral
-                : ICONS.wallet;
+            {recentTxns.length > 0 ? (
+              recentTxns.map((t) => {
+                const iconD = t.type === 'deposit'
+                  ? ICONS.deposit
+                  : t.type === 'roi'
+                  ? ICONS.invest
+                  : t.type === 'referral'
+                  ? ICONS.referral
+                  : ICONS.wallet;
 
-              const isPositive = t.amountFormatted.startsWith('+');
+                const isPositive = (t.amountFormatted || '').startsWith('+');
 
-              return (
-                <div
-                  key={t.id}
-                  onClick={() => navigateTo('transactions')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '14px',
-                    padding: '14px 0',
-                    borderTop: '1px solid var(--divider)',
-                    minHeight: '72px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <div style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '50%',
-                    background: 'var(--icon-bg)',
-                    color: 'var(--accent-text)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flex: 'none'
-                  }}>
-                    <Icon d={iconD} size={20} />
+                return (
+                  <div
+                    key={t.id}
+                    onClick={() => navigateTo('transactions')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '14px',
+                      padding: '14px 0',
+                      borderTop: '1px solid var(--divider)',
+                      minHeight: '72px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '50%',
+                      background: 'var(--icon-bg)',
+                      color: 'var(--accent-text)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flex: 'none'
+                    }}>
+                      <Icon d={iconD} size={20} />
+                    </div>
+
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                      <span style={{ fontSize: '15px', fontWeight: 500 }}>{t.title}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{t.sub ? `${t.sub} · ` : ''}{t.date}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                      <span
+                        className="num"
+                        style={{
+                          fontSize: '15px',
+                          fontWeight: 600,
+                          color: isPositive ? 'var(--pos)' : 'var(--text)'
+                        }}
+                      >
+                        {t.amountFormatted}
+                      </span>
+                      <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{t.status}</span>
+                    </div>
                   </div>
-
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
-                    <span style={{ fontSize: '15px', fontWeight: 500 }}>{t.title}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{t.sub} · {t.date}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                    <span
-                      className="num"
-                      style={{
-                        fontSize: '15px',
-                        fontWeight: 600,
-                        color: isPositive ? 'var(--pos)' : 'var(--text)'
-                      }}
-                    >
-                      {t.amountFormatted}
-                    </span>
-                    <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{t.status}</span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: '14px', borderTop: '1px solid var(--divider)' }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📜</div>
+                <p style={{ margin: '0 0 6px 0', fontWeight: 500, color: 'var(--text)' }}>No Transactions Yet</p>
+                <span style={{ fontSize: '13px' }}>Your deposit confirmations, 0.45% daily yields, and referral payouts will appear here in real time.</span>
+              </div>
+            )}
           </div>
         </section>
       </div>
@@ -267,7 +469,7 @@ export function DashboardPage() {
               >
                 <span style={{ fontSize: '12px' }}>From ROI Wallet</span>
                 <span className="num" style={{ fontSize: '16px', fontWeight: 700 }}>
-                  ₹{user.roiWalletBalance.toLocaleString('en-IN')}
+                  ₹{roiWalletBalance.toLocaleString('en-IN')}
                 </span>
               </button>
               <button
@@ -278,7 +480,7 @@ export function DashboardPage() {
               >
                 <span style={{ fontSize: '12px' }}>From Referral Wallet</span>
                 <span className="num" style={{ fontSize: '16px', fontWeight: 700 }}>
-                  ₹{user.referralWalletBalance.toLocaleString('en-IN')}
+                  ₹{referralWalletBalance.toLocaleString('en-IN')}
                 </span>
               </button>
             </div>

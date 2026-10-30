@@ -33,11 +33,44 @@ const depositSchema = new mongoose.Schema({
     trim: true,
     default: ''
   },
+  amountINR: {
+    type: Number,
+    default: function() { return this.amount; }
+  },
+  amountCrypto: {
+    type: Number,
+    default: 0
+  },
+  network: {
+    type: String,
+    default: 'BSC'
+  },
+  txHash: {
+    type: String,
+    default: function() { return this.blockchainTxHash || ''; }
+  },
+  method: {
+    type: String,
+    default: function() { return this.paymentMethod; }
+  },
+  adminRemark: {
+    type: String,
+    default: function() { return this.reviewNotes || this.rejectionReason || ''; }
+  },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: ['pending', 'approved', 'rejected', 'PENDING', 'APPROVED', 'REJECTED'],
     default: 'pending',
     index: true
+  },
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  rejectionReason: {
+    type: String,
+    default: function() { return this.reviewNotes || ''; }
   },
   reviewedBy: {
     type: mongoose.Schema.Types.ObjectId,

@@ -8,23 +8,78 @@ export function ProfilePage() {
     theme,
     toggleTheme,
     navigateTo,
+    web3Connected,
+    web3Address,
     connectWeb3Wallet,
     disconnectWeb3Wallet,
     resetToDefaults,
     achieverBonuses,
     transactions,
-    showToast
+    showToast,
+    openLoginModal,
+    logout,
+    updateBankDetails,
+    submitKyc
   } = useApp();
 
   const [activeModal, setActiveModal] = useState(null);
   const [showSecret, setShowSecret] = useState(false);
 
-  const bankDetails = {
-    accountHolder: user.name,
-    bankName: 'HDFC Bank Ltd',
-    accountNumber: '•••• •••• 8921',
-    ifsc: 'HDFC0001244',
-    upiId: 'rutajeet.mukherjee@okhdfcbank'
+  // KYC Submission form state
+  const [kycDocType, setKycDocType] = useState('Aadhaar Card');
+  const [kycDocId, setKycDocId] = useState('');
+
+  // Bank form state
+  const [isEditingBank, setIsEditingBank] = useState(false);
+  const [bankNameInput, setBankNameInput] = useState('');
+  const [accountNumInput, setAccountNumInput] = useState('');
+  const [ifscInput, setIfscInput] = useState('');
+  const [upiInput, setUpiInput] = useState('');
+
+  if (!user) {
+    return (
+      <div style={{ maxWidth: '480px', margin: '40px auto', width: '100%', textAlign: 'center', padding: '36px 24px' }} className="card">
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔐</div>
+        <h2 style={{ margin: '0 0 8px 0', fontSize: '22px' }}>Authentication Required</h2>
+        <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: 1.6, marginBottom: '24px' }}>
+          Please sign in to your UNICORN account to access profile settings, account statements, 2FA security, and banking details.
+        </p>
+        <button
+          onClick={openLoginModal}
+          className="btnp btnw"
+          style={{ width: '100%', height: '48px', fontSize: '15px', fontWeight: 600 }}
+        >
+          Log In / Register
+        </button>
+      </div>
+    );
+  }
+
+  const bankDetails = user.bankDetails;
+
+  const handleSaveBank = (e) => {
+    e.preventDefault();
+    if (!bankNameInput || !accountNumInput) {
+      showToast('Please enter both Bank Name and Account Number.', 'error');
+      return;
+    }
+    updateBankDetails({
+      accountHolder: user.name,
+      bankName: bankNameInput,
+      accountNumber: accountNumInput,
+      ifsc: ifscInput || 'IFSC0001234',
+      upiId: upiInput || `${user.name.toLowerCase().replace(/[^a-z0-9]/g, '')}@okbank`
+    });
+    setIsEditingBank(false);
+  };
+
+  const handleKycSubmit = (e) => {
+    e.preventDefault();
+    if (!kycDocId || kycDocId.trim().length < 4) {
+      showToast('Please enter a valid government document number.', 'error');
+      return;
+    }
+    submitKyc(kycDocType, kycDocId.trim());
   };
 
   const handleCopy = (text, label) => {
@@ -61,22 +116,28 @@ export function ProfilePage() {
         </h1>
 
         <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
-          {user.rank} · ID {user.id}
+          {user.rank || 'Starter Unicorn'} · ID {user.id}
         </span>
 
-        <span style={{
-          fontSize: '12px',
-          fontWeight: 600,
-          color: 'var(--accent-text)',
-          background: 'var(--icon-bg)',
-          padding: '6px 14px',
-          borderRadius: '14px',
-          marginTop: '2px',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px'
-        }}>
-          <span>✓</span> KYC &amp; 2FA protected
+        <span
+          onClick={() => setActiveModal('kyc')}
+          style={{
+            fontSize: '12px',
+            fontWeight: 600,
+            color: user.kycStatus === 'VERIFIED' ? 'var(--pos)' : user.kycStatus === 'PENDING' ? '#F59E0B' : '#EF4444',
+            background: user.kycStatus === 'VERIFIED' ? 'rgba(94, 224, 168, 0.12)' : user.kycStatus === 'PENDING' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+            padding: '6px 14px',
+            borderRadius: '14px',
+            marginTop: '2px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            cursor: 'pointer'
+          }}
+          title="Click to view KYC status and upload documents"
+        >
+          <span>{user.kycStatus === 'VERIFIED' ? '✓' : user.kycStatus === 'PENDING' ? '⏳' : '⚠️'}</span>
+          KYC {user.kycStatus === 'VERIFIED' ? 'VERIFIED & 2FA PROTECTED' : user.kycStatus === 'PENDING' ? 'UNDER REVIEW' : 'NOT VERIFIED (Click to Verify)'}
         </span>
       </section>
 
@@ -207,6 +268,29 @@ export function ProfilePage() {
         Reset Demo Data
       </button>
 
+      {/* Log Out Button */}
+      <button
+        onClick={logout}
+        className="btno"
+        style={{
+          borderColor: 'rgba(239, 68, 68, 0.4)',
+          color: '#ef4444',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          fontWeight: 600,
+          background: 'rgba(239, 68, 68, 0.05)'
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        Log Out of Account
+      </button>
+
       {/* --- Modals --- */}
 
       {/* Statement Modal */}
@@ -298,31 +382,122 @@ export function ProfilePage() {
               <h3 style={{ margin: 0, fontSize: '18px' }}>KYC Verification</h3>
               <button onClick={() => setActiveModal(null)} style={{ fontSize: '20px', color: 'var(--muted)' }}>✕</button>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'rgba(94, 224, 168, 0.12)', borderRadius: '12px' }}>
-              <span style={{ color: 'var(--pos)', fontSize: '18px' }}>✓</span>
-              <div>
-                <strong style={{ display: 'block', fontSize: '13px', color: 'var(--pos)' }}>Verification Approved</strong>
-                <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Aadhaar &amp; PAN Card Linked</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--muted)' }}>Document ID:</span>
-                <span className="num" style={{ fontWeight: 600 }}>XXXX-XXXX-4912</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--muted)' }}>Full Name:</span>
-                <span style={{ fontWeight: 600 }}>{user.name}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--muted)' }}>Approval Date:</span>
-                <span style={{ fontWeight: 600 }}>12 October 2026</span>
-              </div>
-            </div>
+
+            {user.kycStatus === 'VERIFIED' ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', background: 'rgba(94, 224, 168, 0.12)', borderRadius: '12px' }}>
+                  <span style={{ color: 'var(--pos)', fontSize: '20px' }}>✓</span>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '14px', color: 'var(--pos)' }}>Verification Approved</strong>
+                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{user.kycDocumentType || 'Government ID Linked'}</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--muted)' }}>Document ID:</span>
+                    <span className="num" style={{ fontWeight: 600 }}>{user.kycDocumentId || 'XXXX-XXXX-4912'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--muted)' }}>Full Legal Name:</span>
+                    <span style={{ fontWeight: 600 }}>{user.name}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--muted)' }}>Status:</span>
+                    <span style={{ color: 'var(--pos)', fontWeight: 600 }}>Active &amp; Whitelisted</span>
+                  </div>
+                </div>
+              </>
+            ) : user.kycStatus === 'PENDING' ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', background: 'rgba(245, 158, 11, 0.12)', borderRadius: '12px' }}>
+                  <span style={{ color: '#F59E0B', fontSize: '20px' }}>⏳</span>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '14px', color: '#F59E0B' }}>Documents Under Review</strong>
+                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Platform compliance team is validating your submission</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--muted)' }}>Document Type:</span>
+                    <span style={{ fontWeight: 600 }}>{user.kycDocumentType || 'Government ID'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--muted)' }}>Document Number:</span>
+                    <span className="num" style={{ fontWeight: 600 }}>{user.kycDocumentId || 'Submitted'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--muted)' }}>Full Name:</span>
+                    <span style={{ fontWeight: 600 }}>{user.name}</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <form onSubmit={handleKycSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px' }}>
+                  <span style={{ color: '#EF4444', fontSize: '20px' }}>⚠️</span>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '14px', color: '#EF4444' }}>KYC Not Verified</strong>
+                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Submit your ID details to verify your new account</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 500 }}>Select Document Type</label>
+                  <select
+                    value={kycDocType}
+                    onChange={e => setKycDocType(e.target.value)}
+                    style={{
+                      height: '42px',
+                      borderRadius: '10px',
+                      background: 'var(--surface2)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text)',
+                      padding: '0 12px',
+                      fontSize: '14px',
+                      outline: 'none'
+                    }}
+                  >
+                    <option value="Aadhaar Card">Aadhaar Card (12-digit UID)</option>
+                    <option value="PAN Card">PAN Card (10-character alphanumeric)</option>
+                    <option value="Passport">International Passport</option>
+                    <option value="Driving License">Driving License</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 500 }}>Document ID / Number</label>
+                  <input
+                    type="text"
+                    value={kycDocId}
+                    onChange={e => setKycDocId(e.target.value)}
+                    placeholder="e.g. 5491-9201-8392"
+                    style={{
+                      height: '42px',
+                      borderRadius: '10px',
+                      background: 'var(--surface2)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--text)',
+                      padding: '0 12px',
+                      fontSize: '14px',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="btnp btnw"
+                  style={{ height: '44px', fontSize: '14px', fontWeight: 600, marginTop: '6px' }}
+                >
+                  Submit KYC for Approval
+                </button>
+              </form>
+            )}
+
             <button
               onClick={() => setActiveModal(null)}
-              className="btnp btnw"
-              style={{ width: '100%', height: '46px', fontSize: '14px' }}
+              className="btno"
+              style={{ width: '100%', height: '42px', fontSize: '14px' }}
             >
               Close
             </button>
@@ -370,47 +545,131 @@ export function ProfilePage() {
               <h3 style={{ margin: 0, fontSize: '18px' }}>Bank &amp; Web3 Accounts</h3>
               <button onClick={() => setActiveModal(null)} style={{ fontSize: '20px', color: 'var(--muted)' }}>✕</button>
             </div>
-            <div style={{ background: 'var(--surface2)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>PRIMARY BANK ACCOUNT:</span>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--muted)' }}>Bank:</span>
-                <strong>{bankDetails.bankName}</strong>
+
+            {/* Primary Bank Section */}
+            <div style={{ background: 'var(--surface2)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  PRIMARY BANK ACCOUNT (INR)
+                </span>
+                {bankDetails && (
+                  <button
+                    onClick={() => {
+                      setBankNameInput(bankDetails.bankName || '');
+                      setAccountNumInput(bankDetails.accountNumber || '');
+                      setIfscInput(bankDetails.ifsc || '');
+                      setUpiInput(bankDetails.upiId || '');
+                      setIsEditingBank(!isEditingBank);
+                    }}
+                    style={{ fontSize: '12px', color: 'var(--accent-text)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    {isEditingBank ? 'Cancel' : 'Edit Details'}
+                  </button>
+                )}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--muted)' }}>A/C Number:</span>
-                <strong className="num">{bankDetails.accountNumber}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--muted)' }}>IFSC:</span>
-                <strong className="num">{bankDetails.ifsc}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--muted)' }}>UPI ID:</span>
-                <strong className="num" style={{ color: 'var(--accent-text)' }}>{bankDetails.upiId}</strong>
-              </div>
+
+              {bankDetails && !isEditingBank ? (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--muted)' }}>Bank Name:</span>
+                    <strong>{bankDetails.bankName}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--muted)' }}>A/C Number:</span>
+                    <strong className="num">{bankDetails.accountNumber}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--muted)' }}>IFSC:</span>
+                    <strong className="num">{bankDetails.ifsc}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--muted)' }}>UPI ID:</span>
+                    <strong className="num" style={{ color: 'var(--accent-text)' }}>{bankDetails.upiId}</strong>
+                  </div>
+                </>
+              ) : (
+                <form onSubmit={handleSaveBank} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {!bankDetails && (
+                    <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                      No bank account linked yet. Enter your banking details for direct fiat payouts.
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    placeholder="Bank Name (e.g. State Bank of India, HDFC)"
+                    value={bankNameInput}
+                    onChange={e => setBankNameInput(e.target.value)}
+                    style={{ height: '38px', borderRadius: '8px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', padding: '0 12px', fontSize: '13px' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Account Number"
+                    value={accountNumInput}
+                    onChange={e => setAccountNumInput(e.target.value)}
+                    style={{ height: '38px', borderRadius: '8px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', padding: '0 12px', fontSize: '13px' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="IFSC Code (e.g. SBIN0001244)"
+                    value={ifscInput}
+                    onChange={e => setIfscInput(e.target.value)}
+                    style={{ height: '38px', borderRadius: '8px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', padding: '0 12px', fontSize: '13px' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="UPI ID (e.g. name@okhdfcbank)"
+                    value={upiInput}
+                    onChange={e => setUpiInput(e.target.value)}
+                    style={{ height: '38px', borderRadius: '8px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', padding: '0 12px', fontSize: '13px' }}
+                  />
+                  <button
+                    type="submit"
+                    className="btnp btnw"
+                    style={{ height: '40px', fontSize: '13px', fontWeight: 600, marginTop: '4px' }}
+                  >
+                    Save Primary Bank
+                  </button>
+                </form>
+              )}
             </div>
 
-            <div style={{ background: 'var(--surface2)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>WEB3 WALLET (BEP-20):</span>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="num" style={{ fontSize: '12px', color: user.web3Connected ? 'var(--pos)' : 'var(--muted)' }}>
-                  {user.web3Connected ? `${user.web3Address.slice(0, 10)}...${user.web3Address.slice(-8)}` : 'Not Connected'}
-                </span>
-                <button
-                  onClick={user.web3Connected ? disconnectWeb3Wallet : connectWeb3Wallet}
-                  style={{ fontSize: '12px', color: 'var(--accent-text)', fontWeight: 600 }}
-                >
-                  {user.web3Connected ? 'Disconnect' : 'Connect'}
-                </button>
-              </div>
-            </div>
+            {/* Web3 Wallet Section */}
+            {(() => {
+              const isWeb3Conn = Boolean(user?.web3Connected || web3Connected);
+              const currentWeb3Addr = user?.web3Address || web3Address || '';
+              return (
+                <div style={{ background: 'var(--surface2)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    WEB3 WALLET (BNB SMART CHAIN BEP-20)
+                  </span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span className="num" style={{ fontSize: '13px', color: isWeb3Conn ? 'var(--pos)' : 'var(--muted)' }}>
+                      {isWeb3Conn && currentWeb3Addr ? `${currentWeb3Addr.slice(0, 8)}...${currentWeb3Addr.slice(-6)}` : 'Not Connected'}
+                    </span>
+                    <button
+                      onClick={isWeb3Conn ? disconnectWeb3Wallet : connectWeb3Wallet}
+                      style={{
+                        fontSize: '12px',
+                        color: isWeb3Conn ? '#ef4444' : 'var(--accent-text)',
+                        fontWeight: 600,
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {isWeb3Conn ? 'Disconnect' : 'Connect Wallet'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
 
             <button
               onClick={() => setActiveModal(null)}
-              className="btnp btnw"
-              style={{ width: '100%', height: '46px', fontSize: '14px' }}
+              className="btno"
+              style={{ width: '100%', height: '44px', fontSize: '14px' }}
             >
-              Close
+              Done
             </button>
           </div>
         </div>

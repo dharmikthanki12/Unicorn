@@ -11,12 +11,15 @@ import { TokenomicsPage } from './pages/TokenomicsPage';
 import { AdminPage } from './pages/AdminPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { NotificationsPage } from './pages/NotificationsPage';
+import { LandingPage } from './pages/LandingPage';
 
 export function App() {
   const { activeScreen } = useApp();
 
   const renderScreen = () => {
     switch (activeScreen) {
+      case 'landing':
+        return <LandingPage />;
       case 'home':
         return <DashboardPage />;
       case 'invest':

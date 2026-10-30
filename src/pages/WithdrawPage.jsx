@@ -3,15 +3,34 @@ import { useApp } from '../context/AppContext';
 import { Icon, ICONS } from '../components/Icons';
 
 export function WithdrawPage() {
-  const { user, initiateWithdrawal, navigateTo, showToast } = useApp();
+  const { user, web3Address, initiateWithdrawal, navigateTo, showToast, openLoginModal } = useApp();
 
   const [wallet, setWallet] = useState('roi');
   const [method, setMethod] = useState('upi');
-  const [amount, setAmount] = useState('15000');
-  const [destination, setDestination] = useState('vikram.patel@okhdfcbank');
+  const [amount, setAmount] = useState('');
+  const [destination, setDestination] = useState(user?.bankDetails?.upiId || '');
   const [twoFactorCode, setTwoFactorCode] = useState('');
 
-  const activeBalance = wallet === 'roi' ? user.roiWalletBalance : user.referralWalletBalance;
+  if (!user) {
+    return (
+      <div style={{ maxWidth: '480px', margin: '40px auto', width: '100%', textAlign: 'center', padding: '36px 24px' }} className="card">
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔐</div>
+        <h2 style={{ margin: '0 0 8px 0', fontSize: '22px' }}>Authentication Required</h2>
+        <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: 1.6, marginBottom: '24px' }}>
+          Please log in to your UNICORN account to initiate payouts from your ROI Wallet or Referral Wallet with 2FA protection.
+        </p>
+        <button
+          onClick={openLoginModal}
+          className="btnp btnw"
+          style={{ width: '100%', height: '48px', fontSize: '15px', fontWeight: 600 }}
+        >
+          Log In / Register
+        </button>
+      </div>
+    );
+  }
+
+  const activeBalance = wallet === 'roi' ? (user.roiWalletBalance || 0) : (user.referralWalletBalance || 0);
 
   const handlePercentage = (pct) => {
     const val = Math.floor((activeBalance * pct) / 100);
@@ -21,19 +40,24 @@ export function WithdrawPage() {
   const handleMethodChange = (newMethod) => {
     setMethod(newMethod);
     if (newMethod === 'upi') {
-      setDestination('vikram.patel@okhdfcbank');
+      setDestination(user?.bankDetails?.upiId || '');
     } else {
-      setDestination(user.web3Connected ? user.web3Address : '0x71C5A869d2319fBc9057bA27218Ac9bB38A9');
+      setDestination(user?.web3Address || web3Address || '');
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!amount || Number(amount) <= 0) {
+    const numAmt = Number(amount);
+    if (!amount || isNaN(numAmt) || numAmt <= 0) {
       showToast('Enter valid withdrawal amount', 'error');
       return;
     }
-    if (Number(amount) > activeBalance) {
+    if (numAmt < 1000) {
+      showToast('Minimum payout is ₹1,000 ($10)', 'error');
+      return;
+    }
+    if (numAmt > activeBalance) {
       showToast('Insufficient wallet balance', 'error');
       return;
     }

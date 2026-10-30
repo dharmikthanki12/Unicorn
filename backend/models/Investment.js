@@ -38,8 +38,51 @@ const investmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'rejected', 'cancelled'],
+    enum: ['pending', 'confirmed', 'rejected', 'cancelled', 'ACTIVE', 'COMPLETED', 'CONFIRMED', 'MATURED'],
     default: 'confirmed'
+  },
+  amountINR: {
+    type: Number,
+    default: function() { return this.amount; }
+  },
+  maturityDate: {
+    type: Date,
+    default: function() {
+      const d = new Date(this.startDate || Date.now());
+      d.setDate(d.getDate() + 365);
+      return d;
+    }
+  },
+  isLocked: {
+    type: Boolean,
+    default: true
+  },
+  endDate: {
+    type: Date,
+    default: function() {
+      return this.maturityDate;
+    }
+  },
+  roiRateSnapshot: {
+    type: Number,
+    default: 0.0045
+  },
+  durationDays: {
+    type: Number,
+    default: 365
+  },
+  totalRoiCredited: {
+    type: Number,
+    default: 0
+  },
+  totalReferralCredited: {
+    type: Number,
+    default: 0
+  },
+  eligibilityStatus: {
+    type: String,
+    enum: ['ELIGIBLE', 'PAUSED', 'COMPLETED', 'DISQUALIFIED'],
+    default: 'ELIGIBLE'
   },
   paymentMethod: {
     type: String,
