@@ -21,9 +21,6 @@ export function WebsiteLayout({ children }) {
         {children}
       </main>
 
-      {/* Official Web3 Platform Footer */}
-      <Footer />
-
       {/* Responsive Mobile Bottom Navigation Bar (Phone Screens <= 768px) */}
       <BottomNav />
 
