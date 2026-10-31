@@ -5,7 +5,6 @@ import { Icon, ICONS } from '../components/Icons';
 export function ReferralPage() {
   const { user, team, referralTiers, rankBonuses, achieverBonuses, showToast, navigateTo } = useApp();
   const [selectedLevel, setSelectedLevel] = useState(1);
-  const [extraView, setExtraView] = useState('summary'); // 'summary' | 'ranks' | 'trips'
   const [showQrModal, setShowQrModal] = useState(false);
 
   const referralCode = user?.referralCode || 'UNC-88294';
@@ -144,128 +143,8 @@ export function ReferralPage() {
               />
             </div>
             <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
-              Direct volume needed to unlock the Andaman pass (₹{Math.max(0, 1500000 - (user?.directBusiness || 0)).toLocaleString('en-IN')} remaining)
+              Direct volume needed to unlock the Andaman pass
             </span>
-          </section>
-
-          {/* Card 3: Referral Overview & Rewards Breakdown */}
-          <section className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--divider)', paddingBottom: '12px' }}>
-              <span style={{ fontSize: '15px', fontWeight: 600 }}>Earnings & Rewards</span>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <button
-                  onClick={() => setExtraView('summary')}
-                  className={`chip ${extraView === 'summary' ? 'on' : ''}`}
-                  style={{ padding: '4px 10px', fontSize: '12px' }}
-                >
-                  Stats
-                </button>
-                <button
-                  onClick={() => setExtraView('trips')}
-                  className={`chip ${extraView === 'trips' ? 'on' : ''}`}
-                  style={{ padding: '4px 10px', fontSize: '12px' }}
-                >
-                  Trips
-                </button>
-                <button
-                  onClick={() => setExtraView('ranks')}
-                  className={`chip ${extraView === 'ranks' ? 'on' : ''}`}
-                  style={{ padding: '4px 10px', fontSize: '12px' }}
-                >
-                  Ranks
-                </button>
-              </div>
-            </div>
-
-            {extraView === 'summary' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
-                <div style={{ padding: '12px', background: 'var(--surface2)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block' }}>Referral Wallet</span>
-                  <div className="num" style={{ fontSize: '18px', fontWeight: 700, color: 'var(--pos)', marginTop: '2px' }}>
-                    ₹{user.referralWalletBalance.toLocaleString('en-IN')}
-                  </div>
-                </div>
-                <div style={{ padding: '12px', background: 'var(--surface2)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block' }}>Direct Partners</span>
-                  <div className="num" style={{ fontSize: '18px', fontWeight: 700, marginTop: '2px' }}>
-                    {user.totalDirects} Active
-                  </div>
-                </div>
-                <div style={{ padding: '12px', background: 'var(--surface2)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block' }}>Team Volume</span>
-                  <div className="num" style={{ fontSize: '18px', fontWeight: 700, color: 'var(--accent-text)', marginTop: '2px' }}>
-                    ₹{(user.teamBusiness / 100000).toFixed(1)}L
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {extraView === 'trips' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {achieverBonuses.map(trip => (
-                  <div
-                    key={trip.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '10px 12px',
-                      background: 'var(--surface2)',
-                      borderRadius: '10px',
-                      fontSize: '13px'
-                    }}
-                  >
-                    <div>
-                      <strong style={{ display: 'block' }}>{trip.destination}</strong>
-                      <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Direct target: {trip.directTarget}</span>
-                    </div>
-                    <span
-                      className="num"
-                      style={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        background: trip.unlocked ? 'rgba(94, 224, 168, 0.15)' : 'var(--surface3)',
-                        color: trip.unlocked ? 'var(--pos)' : 'var(--muted)'
-                      }}
-                    >
-                      {trip.unlocked ? 'Unlocked ✓' : 'In Progress'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {extraView === 'ranks' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {rankBonuses.map(rb => (
-                  <div
-                    key={rb.rank}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '10px 12px',
-                      background: 'var(--surface2)',
-                      borderRadius: '10px',
-                      fontSize: '13px'
-                    }}
-                  >
-                    <div>
-                      <strong style={{ display: 'block' }}>{rb.rank}</strong>
-                      <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Team: {rb.teamTarget}</span>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <span className="num" style={{ fontWeight: 700, color: 'var(--pos)' }}>{rb.cashReward}</span>
-                      <div style={{ fontSize: '10px', color: rb.achieved ? 'var(--pos)' : 'var(--muted)' }}>
-                        {rb.achieved ? 'Achieved ✓' : 'Eligible'}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </section>
         </div>
 
