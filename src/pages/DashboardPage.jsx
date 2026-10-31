@@ -157,32 +157,7 @@ export function DashboardPage() {
             </div>
           </section>
 
-          {/* Active Capital Strategy Card */}
-          <section className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--accent-text)' }}>
-                <Icon d={ICONS.trip} size={20} />
-                <span style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text)' }}>Active Staked Strategy</span>
-              </div>
-              <span style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                color: activeInvestedAmount > 0 ? 'var(--pos)' : 'var(--accent-text)',
-                background: activeInvestedAmount > 0 ? 'rgba(94, 224, 168, 0.12)' : 'rgba(181, 92, 169, 0.12)',
-                padding: '2px 8px',
-                borderRadius: '6px'
-              }}>
-                {activeInvestedAmount > 0 ? 'VIP Active' : 'Ready to Deploy'}
-              </span>
-            </div>
-            <div className="num" style={{ fontSize: '32px', fontWeight: 600 }}>
-              ₹{activeInvestedAmount.toLocaleString('en-IN')}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--muted)' }}>
-              <span>Fixed Return: <strong style={{ color: 'var(--pos)' }}>0.45% / 24h</strong></span>
-              <span>Tier: <strong>{user?.rank || 'Starter Unicorn'}</strong></span>
-            </div>
-          </section>
+
         </div>
 
         {/* Right Column: Transaction History Card matching Unicorn_Mobile_App.html Screen 13 */}
