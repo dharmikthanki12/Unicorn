@@ -19,29 +19,9 @@ exports.register = async (req, res, next) => {
   try {
     const { name, email, password, phone, referralCode, walletAddress } = req.body;
 
-    // Resilient offline fallback if DB connection is unavailable
+    // Ensure database connection is active - do NOT allow phantom registrations
     if (mongoose.connection.readyState !== 1) {
-      const cleanEmail = (email || '').toLowerCase();
-      const fakeId = new mongoose.Types.ObjectId();
-      const token = generateAccessToken(fakeId, 'user');
-      return res.status(201).json({
-        success: true,
-        message: 'Account registered successfully (Resilient mode).',
-        token,
-        accessToken: token,
-        refreshToken: generateRefreshToken(fakeId),
-        user: {
-          id: fakeId,
-          name: name.trim(),
-          email: cleanEmail,
-          phone: phone || '',
-          role: 'user',
-          referralCode: 'UNC' + Math.floor(1000 + Math.random() * 9000),
-          referredBy: referralCode || null,
-          walletAddress: walletAddress ? walletAddress.trim() : null,
-          kycStatus: 'UNVERIFIED'
-        }
-      });
+      return next(new ApiError(503, 'Database is not connected. Unable to register user in MongoDB.'));
     }
 
     // Check duplicate email
@@ -157,31 +137,9 @@ exports.login = async (req, res, next) => {
       return next(new ApiError(400, 'Please provide email and password.'));
     }
 
-    // Resilient offline fallback if DB connection is unavailable
+    // Ensure database connection is active - do NOT allow phantom logins
     if (mongoose.connection.readyState !== 1) {
-      const cleanEmail = email.toLowerCase();
-      const isAdmin = cleanEmail.includes('admin');
-      const fakeId = new mongoose.Types.ObjectId();
-      const role = isAdmin ? 'admin' : 'user';
-      const token = generateAccessToken(fakeId, role);
-      return res.json({
-        success: true,
-        message: 'Logged in successfully (Resilient mode).',
-        token,
-        accessToken: token,
-        refreshToken: generateRefreshToken(fakeId),
-        user: {
-          id: fakeId,
-          name: cleanEmail.split('@')[0].toUpperCase(),
-          email: cleanEmail,
-          phone: '',
-          role,
-          referralCode: 'UNC' + Math.floor(1000 + Math.random() * 9000),
-          referredBy: null,
-          walletAddress: '',
-          kycStatus: isAdmin ? 'VERIFIED' : 'UNVERIFIED'
-        }
-      });
+      return next(new ApiError(503, 'Database is not connected. Unable to verify credentials in MongoDB.'));
     }
 
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');

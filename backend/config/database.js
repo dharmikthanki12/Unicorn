@@ -9,7 +9,7 @@ try {
 let isConnected = false;
 
 const connectDB = async () => {
-  const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/unicorn';
+  const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://zarwebcoders:zarwebcoders@cluster0.lqgakzj.mongodb.net/unicorn?retryWrites=true&w=majority';
 
   try {
     const conn = await mongoose.connect(mongoURI, {

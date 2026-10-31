@@ -20,37 +20,13 @@ const DEFAULT_PACKAGES = [
 
 async function seedInitialData() {
   try {
-    // Seed packages
+    // Seed packages if missing
     const packageCount = await Package.countDocuments();
     if (packageCount === 0) {
       for (const p of DEFAULT_PACKAGES) {
         await Package.create(p);
       }
       console.log('[Seed] 7 Investment Packages seeded successfully.');
-    }
-
-    // Seed default Admin if not exists
-    const adminExists = await User.findOne({ email: 'admin@unicorn.io' });
-    if (!adminExists) {
-      const admin = await User.create({
-        name: 'Protocol Super Admin',
-        email: 'admin@unicorn.io',
-        password: 'adminPassword123',
-        phone: '+91 98765 00000',
-        referralCode: 'UNIOFFICIAL',
-        role: 'admin',
-        kycStatus: 'Verified'
-      });
-
-      await Wallet.create({
-        userId: admin._id,
-        mainBalance: 10000000,
-        roiBalance: 0,
-        referralBalance: 0,
-        uncBalance: 10000000
-      });
-
-      console.log('[Seed] Default Super Admin seeded: admin@unicorn.io / adminPassword123');
     }
   } catch (e) {
     console.warn('[Seed Notice]', e.message);

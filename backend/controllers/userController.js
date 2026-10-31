@@ -97,12 +97,7 @@ exports.updateWalletAddress = async (req, res, next) => {
   try {
     const { address, connected } = req.body;
     if (require('mongoose').connection.readyState !== 1) {
-      return res.json({
-        success: true,
-        message: connected ? 'BEP-20 wallet connected successfully (Resilient mode).' : 'Wallet disconnected.',
-        walletAddress: address || '',
-        web3Connected: Boolean(connected)
-      });
+      return next(new ApiError(503, 'Database is not connected. Unable to update wallet address.'));
     }
 
     const user = await User.findById(req.user._id);

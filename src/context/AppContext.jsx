@@ -36,8 +36,9 @@ export function AppProvider({ children }) {
     if (initial?.user && (initial.user.name === 'Web3 Investor' || initial.user.initials === 'W3' || initial.user.id === 'UNC-88294' || initial.user.name === 'Rutajeet Mukherjee')) {
       return null;
     }
-    // Only restore user if an active authenticated session exists in localStorage
-    if (initial?.user && initial.user.id) {
+    // Only restore user if an active authenticated session exists with a token in localStorage
+    const token = getStoredToken();
+    if (token && initial?.user && initial.user.id) {
       const rawKyc = String(initial.user.kycStatus || 'UNVERIFIED').toUpperCase();
       const normalizedKyc = rawKyc === 'VERIFIED' ? 'VERIFIED' : rawKyc === 'PENDING' ? 'PENDING' : 'UNVERIFIED';
       return {
@@ -135,7 +136,7 @@ export function AppProvider({ children }) {
   const login = async (email, password) => {
     const cleanEmail = (email || '').trim().toLowerCase();
     try {
-      const res = await authAPI.login({ email: cleanEmail, password }).catch(() => null);
+      const res = await authAPI.login({ email: cleanEmail, password });
       if (res && res.user) {
         if (res.token || res.accessToken) setStoredToken(res.token || res.accessToken);
         const backendAddr = res.user.walletAddress || res.user.web3Address || '';
@@ -168,45 +169,11 @@ export function AppProvider({ children }) {
         return true;
       }
     } catch (e) {
-      console.warn('Backend login fallback:', e.message);
+      showToast(e.message || 'Login failed. Invalid credentials or server error.', 'error');
+      return false;
     }
-
-    // Demo / Offline Simulation Login
-    if (cleanEmail.includes('admin')) {
-      setUser(ADMIN_USER);
-      showToast('Logged in as UNICORN Super Admin');
-      setIsAuthModalOpen(false);
-      setActiveScreen('admin');
-      setScreenHistory(['admin']);
-    } else {
-      const cleanId = `UNC-${Math.floor(10000 + Math.random() * 90000)}`;
-      const cleanName = cleanEmail ? cleanEmail.split('@')[0].toUpperCase() : 'INVESTOR';
-      const investorUser = {
-        ...INITIAL_USER,
-        id: cleanId,
-        email: cleanEmail || 'user@unicorn.vip',
-        name: cleanName,
-        initials: cleanName.slice(0, 2),
-        role: 'user',
-        rank: 'Starter Unicorn',
-        kycStatus: 'UNVERIFIED',     // Brand new account is UNVERIFIED until Admin approves!
-        kycDocumentId: '',
-        kycDocumentType: '',
-        twoFactorEnabled: false,
-        web3Connected: false,
-        web3Address: '',
-        mainWalletBalance: 0,
-        roiWalletBalance: 0,
-        referralWalletBalance: 0,
-        activeInvestedAmount: 0
-      };
-      setUser(investorUser);
-      showToast(`Logged in successfully as Investor (${investorUser.name})`);
-      setIsAuthModalOpen(false);
-      setActiveScreen('home');
-      setScreenHistory(['home']);
-    }
-    return true;
+    showToast('Invalid email or password.', 'error');
+    return false;
   };
 
   const logout = () => {
@@ -263,30 +230,24 @@ export function AppProvider({ children }) {
   const register = async (name, email, password, referralCode) => {
     const cleanEmail = (email || '').trim().toLowerCase();
     try {
-      const res = await authAPI.register({ name, email: cleanEmail, password, referralCode }).catch(() => null);
+      const res = await authAPI.register({ name, email: cleanEmail, password, referralCode });
       if (res && res.user) {
         if (res.token || res.accessToken) setStoredToken(res.token || res.accessToken);
         const newUser = createFreshUser(name, cleanEmail, res.user, referralCode);
         setUser(newUser);
-        setTransactions([]); // Clear old mock transactions for new user!
-        showToast(`Welcome to UNICORN, ${name}!`);
+        setTransactions([]); // Clear old transactions for new user
+        showToast(`Welcome to UNICORN, ${name}! Registered successfully.`);
         setIsAuthModalOpen(false);
         setActiveScreen('home');
         setScreenHistory(['home']);
         return true;
       }
     } catch (e) {
-      console.warn('Backend register fallback:', e.message);
+      showToast(e.message || 'Registration failed. Could not save to database.', 'error');
+      return false;
     }
-
-    const newUser = createFreshUser(name, cleanEmail, null, referralCode);
-    setUser(newUser);
-    setTransactions([]); // Clear old mock transactions for new user!
-    showToast(`Account registered successfully for ${name}!`);
-    setIsAuthModalOpen(false);
-    setActiveScreen('home');
-    setScreenHistory(['home']);
-    return true;
+    showToast('Registration failed. Unable to create account.', 'error');
+    return false;
   };
 
   const updateBankDetails = (details) => {
