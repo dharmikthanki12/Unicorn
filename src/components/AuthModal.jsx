@@ -9,8 +9,7 @@ export function AuthModal() {
     authMode,
     setAuthMode,
     login,
-    register,
-    connectWeb3Wallet
+    register
   } = useApp();
 
   // Form states
@@ -49,16 +48,6 @@ export function AuthModal() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickLogin = async (roleType) => {
-    setLoading(true);
-    if (roleType === 'admin') {
-      await login('admin@unicorn.vip', 'AdminPassword2026!');
-    } else {
-      await login('rutajeet@unicorn.io', 'UserPassword2026!');
-    }
-    setLoading(false);
   };
 
   return (
@@ -127,38 +116,6 @@ export function AuthModal() {
           <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
             {authMode === 'login' ? 'Web3-enabled Investment & Yield Protocol' : 'Join and earn 0.45% daily ROI + team rewards'}
           </span>
-        </div>
-
-        {/* Quick Demo Switcher Pills */}
-        <div style={{
-          background: 'var(--input-bg)',
-          borderRadius: '12px',
-          padding: '8px 12px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '6px'
-        }}>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            ⚡ 1-Click Quick Demo Sign In:
-          </span>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('user')}
-              className="chip"
-              style={{ padding: '8px 10px', fontSize: '12px', fontWeight: 600, justifyContent: 'center' }}
-            >
-              👤 Investor (User)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('admin')}
-              className="chip on"
-              style={{ padding: '8px 10px', fontSize: '12px', fontWeight: 600, justifyContent: 'center', background: 'rgba(224, 114, 208, 0.2)', color: '#E072D0', borderColor: '#E072D0' }}
-            >
-              🛡️ Super Admin
-            </button>
-          </div>
         </div>
 
         {/* Mode Tabs */}
@@ -327,21 +284,6 @@ export function AuthModal() {
             {loading ? 'Please wait...' : authMode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
-
-        {/* Web3 Wallet Option */}
-        <div style={{ textAlign: 'center', borderTop: '1px solid var(--divider)', paddingTop: '16px' }}>
-          <button
-            type="button"
-            onClick={() => {
-              connectWeb3Wallet();
-              closeAuthModal();
-            }}
-            className="navbar-wallet-btn"
-            style={{ width: '100%', justifyContent: 'center', height: '42px', fontSize: '13px' }}
-          >
-            🦊 Connect MetaMask / BEP-20 Wallet
-          </button>
-        </div>
       </div>
     </div>
   );
