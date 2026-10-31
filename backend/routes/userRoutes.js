@@ -29,4 +29,9 @@ router.post(
   userController.updateWalletAddress
 );
 
+router.post(
+  '/kyc',
+  userController.submitKyc
+);
+
 module.exports = router;

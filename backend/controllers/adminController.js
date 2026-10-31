@@ -93,6 +93,71 @@ exports.updateUserStatus = async (req, res, next) => {
   }
 };
 
+exports.approveKyc = async (req, res, next) => {
+  try {
+    const { notes } = req.body || {};
+    const user = await User.findById(req.params.id);
+    if (!user) return next(new ApiError(404, 'User not found.'));
+
+    user.kycStatus = 'VERIFIED';
+    user.kycVerified = true;
+    user.kycVerifiedAt = new Date();
+    await user.save();
+
+    await AuditLog.create({
+      performedBy: req.user._id,
+      action: 'APPROVE_KYC',
+      entityType: 'User',
+      entityId: user._id,
+      details: {
+        documentType: user.kycDocumentType,
+        documentId: user.kycDocumentId,
+        notes: notes || 'Approved by Admin'
+      }
+    });
+
+    res.json({
+      success: true,
+      message: `KYC for ${user.name} approved successfully.`,
+      user
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.rejectKyc = async (req, res, next) => {
+  try {
+    const { reason } = req.body || {};
+    const user = await User.findById(req.params.id);
+    if (!user) return next(new ApiError(404, 'User not found.'));
+
+    user.kycStatus = 'UNVERIFIED';
+    user.kycVerified = false;
+    await user.save();
+
+    await AuditLog.create({
+      performedBy: req.user._id,
+      action: 'REJECT_KYC',
+      entityType: 'User',
+      entityId: user._id,
+      details: {
+        documentType: user.kycDocumentType,
+        documentId: user.kycDocumentId,
+        reason: reason || 'Rejected by Admin'
+      }
+    });
+
+    res.json({
+      success: true,
+      message: `KYC for ${user.name} rejected.`,
+      user
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // 3. Packages Management
 exports.getAllPackages = async (req, res, next) => {
   try {

@@ -68,7 +68,7 @@ exports.register = async (req, res, next) => {
       if (!collision) isUnique = true;
     }
 
-    // Create user
+    // Create user with UNVERIFIED KYC status (requires Admin review & approval)
     const user = await User.create({
       name,
       email: email.toLowerCase(),
@@ -80,6 +80,9 @@ exports.register = async (req, res, next) => {
       walletAddress: walletAddress ? walletAddress.trim() : null,
       role: 'user',
       status: 'active',
+      rank: 'Starter Unicorn',
+      kycStatus: 'UNVERIFIED',
+      kycVerified: false,
       lastLoginAt: new Date()
     });
 

@@ -53,7 +53,27 @@ const userSchema = new mongoose.Schema({
   kycStatus: {
     type: String,
     enum: ['Verified', 'Pending', 'Unverified', 'VERIFIED', 'PENDING', 'UNVERIFIED'],
-    default: 'Verified'
+    default: 'UNVERIFIED' // Brand new user is UNVERIFIED until Admin reviews and approves KYC!
+  },
+  kycVerified: {
+    type: Boolean,
+    default: false
+  },
+  kycDocumentType: {
+    type: String,
+    default: null
+  },
+  kycDocumentId: {
+    type: String,
+    default: null
+  },
+  kycSubmittedAt: {
+    type: Date,
+    default: null
+  },
+  kycVerifiedAt: {
+    type: Date,
+    default: null
   },
   sponsorId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -99,7 +119,7 @@ const userSchema = new mongoose.Schema({
   },
   rank: {
     type: String,
-    default: 'Bronze Leader'
+    default: 'Starter Unicorn'
   },
   resetPasswordToken: {
     type: String,

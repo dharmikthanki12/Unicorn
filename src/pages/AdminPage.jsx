@@ -237,14 +237,14 @@ export function AdminPage() {
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
-              {['all', 'Deposit', 'Withdraw'].map(t => (
+              {['all', 'Deposit', 'Withdraw', 'KYC'].map(t => (
                 <button
                   key={t}
                   onClick={() => setFilterType(t)}
                   className={`chip ${filterType === t ? 'on' : ''}`}
                   style={{ fontSize: '12px', padding: '6px 14px' }}
                 >
-                  {t === 'all' ? 'All Types' : t + 's'}
+                  {t === 'all' ? 'All Types' : t === 'KYC' ? 'KYC Verifications' : t + 's'}
                 </button>
               ))}
             </div>
@@ -302,8 +302,16 @@ export function AdminPage() {
                             fontWeight: 700,
                             padding: '4px 10px',
                             borderRadius: '8px',
-                            background: req.type.includes('Deposit') ? 'rgba(76, 175, 80, 0.15)' : 'rgba(33, 150, 243, 0.15)',
-                            color: req.type.includes('Deposit') ? 'var(--pos)' : '#64B5F6'
+                            background: req.type.toLowerCase().includes('kyc')
+                              ? 'rgba(168, 85, 247, 0.15)'
+                              : req.type.includes('Deposit')
+                              ? 'rgba(76, 175, 80, 0.15)'
+                              : 'rgba(33, 150, 243, 0.15)',
+                            color: req.type.toLowerCase().includes('kyc')
+                              ? '#C084FC'
+                              : req.type.includes('Deposit')
+                              ? 'var(--pos)'
+                              : '#64B5F6'
                           }}>
                             {req.type}
                           </span>
@@ -339,7 +347,7 @@ export function AdminPage() {
                         {/* Amount */}
                         <td style={{ padding: '18px 20px', textAlign: 'right' }}>
                           <span className="num" style={{ fontSize: '15px', fontWeight: 700 }}>
-                            {typeof req.amount === 'number' ? `₹${req.amount.toLocaleString('en-IN')}` : req.amount}
+                            {req.type.toLowerCase().includes('kyc') ? '—' : typeof req.amount === 'number' ? `₹${req.amount.toLocaleString('en-IN')}` : req.amount}
                           </span>
                         </td>
 
@@ -376,7 +384,10 @@ export function AdminPage() {
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                               <button
                                 onClick={() => {
-                                  const notes = window.prompt ? window.prompt('Admin review notes (optional):', 'Payment verified against bank statement') : 'Approved';
+                                  const defaultNote = req.type.toLowerCase().includes('kyc')
+                                    ? 'Government ID verified & approved'
+                                    : 'Payment verified against bank statement';
+                                  const notes = window.prompt ? window.prompt('Admin review notes (optional):', defaultNote) : 'Approved';
                                   if (notes !== null) approveAdminRequest(req.id, notes);
                                 }}
                                 style={{
@@ -394,7 +405,10 @@ export function AdminPage() {
                               </button>
                               <button
                                 onClick={() => {
-                                  const reason = window.prompt ? window.prompt('Rejection reason / review notes:', 'Invalid or unverifiable payment reference') : 'Rejected';
+                                  const defaultReason = req.type.toLowerCase().includes('kyc')
+                                    ? 'Document details unreadable or invalid ID number'
+                                    : 'Invalid or unverifiable payment reference';
+                                  const reason = window.prompt ? window.prompt('Rejection reason / review notes:', defaultReason) : 'Rejected';
                                   if (reason !== null) rejectAdminRequest(req.id, reason);
                                 }}
                                 style={{

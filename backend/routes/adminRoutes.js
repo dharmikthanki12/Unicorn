@@ -20,6 +20,10 @@ router.get('/audit-logs', adminController.getAuditLogs);
 router.get('/users', adminController.getAllUsers);
 router.patch('/users/:id', adminController.updateUserStatus);
 router.patch('/users/:id/status', adminController.updateUserStatus);
+router.post('/users/:id/kyc/approve', adminController.approveKyc);
+router.patch('/users/:id/kyc/approve', adminController.approveKyc);
+router.post('/users/:id/kyc/reject', adminController.rejectKyc);
+router.patch('/users/:id/kyc/reject', adminController.rejectKyc);
 
 // 2. Packages Management
 router.get('/packages', adminController.getAllPackages);

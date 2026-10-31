@@ -32,14 +32,17 @@ export function AppProvider({ children }) {
   const initial = loadInitial();
 
   const getInitialUser = () => {
-    // If a phantom 'Web3 Investor' account was stored from old wallet connection logic, discard it
-    if (initial?.user && (initial.user.name === 'Web3 Investor' || initial.user.initials === 'W3')) {
+    // If a phantom 'Web3 Investor' or legacy demo user ('UNC-88294' / 'Rutajeet Mukherjee') was stored, discard it
+    if (initial?.user && (initial.user.name === 'Web3 Investor' || initial.user.initials === 'W3' || initial.user.id === 'UNC-88294' || initial.user.name === 'Rutajeet Mukherjee')) {
       return null;
     }
     // Only restore user if an active authenticated session exists in localStorage
     if (initial?.user && initial.user.id) {
+      const rawKyc = String(initial.user.kycStatus || 'UNVERIFIED').toUpperCase();
+      const normalizedKyc = rawKyc === 'VERIFIED' ? 'VERIFIED' : rawKyc === 'PENDING' ? 'PENDING' : 'UNVERIFIED';
       return {
         ...initial.user,
+        kycStatus: normalizedKyc,
         role: initial.user.role || (initial.user.email?.toLowerCase().includes('admin') || initial.user.id?.includes('ADMIN') ? 'admin' : 'user'),
         web3Connected: Boolean(initial.user.web3Connected),
         web3Address: initial.user.web3Address || ''
@@ -137,9 +140,16 @@ export function AppProvider({ children }) {
         if (res.token || res.accessToken) setStoredToken(res.token || res.accessToken);
         const backendAddr = res.user.walletAddress || res.user.web3Address || '';
         const backendConnected = Boolean(res.user.web3Connected || backendAddr);
+        const rawKyc = String(res.user.kycStatus || (res.user.kycVerified ? 'VERIFIED' : 'UNVERIFIED')).toUpperCase();
+        const normalizedKyc = rawKyc === 'VERIFIED' ? 'VERIFIED' : rawKyc === 'PENDING' ? 'PENDING' : 'UNVERIFIED';
+
         const loggedUser = {
           ...INITIAL_USER,
           ...res.user,
+          id: res.user.id || res.user._id || `UNC-${Math.floor(10000 + Math.random() * 90000)}`,
+          name: res.user.name || cleanEmail.split('@')[0].toUpperCase(),
+          rank: res.user.rank || 'Starter Unicorn',
+          kycStatus: normalizedKyc,
           initials: res.user.name ? res.user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'U',
           role: res.user.role || (cleanEmail.includes('admin') ? 'admin' : 'user'),
           web3Connected: backendConnected,
@@ -169,14 +179,26 @@ export function AppProvider({ children }) {
       setActiveScreen('admin');
       setScreenHistory(['admin']);
     } else {
+      const cleanId = `UNC-${Math.floor(10000 + Math.random() * 90000)}`;
+      const cleanName = cleanEmail ? cleanEmail.split('@')[0].toUpperCase() : 'INVESTOR';
       const investorUser = {
         ...INITIAL_USER,
-        email: cleanEmail || INITIAL_USER.email,
-        name: cleanEmail === INITIAL_USER.email ? INITIAL_USER.name : cleanEmail.split('@')[0].toUpperCase(),
-        initials: cleanEmail === INITIAL_USER.email ? 'RM' : cleanEmail.slice(0, 2).toUpperCase(),
+        id: cleanId,
+        email: cleanEmail || 'user@unicorn.vip',
+        name: cleanName,
+        initials: cleanName.slice(0, 2),
         role: 'user',
+        rank: 'Starter Unicorn',
+        kycStatus: 'UNVERIFIED',     // Brand new account is UNVERIFIED until Admin approves!
+        kycDocumentId: '',
+        kycDocumentType: '',
+        twoFactorEnabled: false,
         web3Connected: false,
-        web3Address: ''
+        web3Address: '',
+        mainWalletBalance: 0,
+        roiWalletBalance: 0,
+        referralWalletBalance: 0,
+        activeInvestedAmount: 0
       };
       setUser(investorUser);
       showToast(`Logged in successfully as Investor (${investorUser.name})`);
@@ -284,18 +306,37 @@ export function AppProvider({ children }) {
     showToast('Bank and UPI payout details updated successfully!');
   };
 
-  const submitKyc = (documentType, documentId) => {
+  const submitKyc = async (documentType, documentId) => {
+    const cleanDocId = (documentId || '').trim();
     setUser(prev => {
       if (!prev) return prev;
       return {
         ...prev,
         kycStatus: 'PENDING',
         kycDocumentType: documentType,
-        kycDocumentId: documentId,
+        kycDocumentId: cleanDocId,
         kycSubmittedDate: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
       };
     });
-    showToast('KYC documents submitted successfully! Status: Under Review.');
+
+    const newKycReq = {
+      id: `KYC-REQ-${Math.floor(1000 + Math.random() * 9000)}`,
+      type: 'KYC Verification',
+      user: `${user?.name || 'Investor'} (${user?.id || 'UNC-ID'})`,
+      userId: user?.id,
+      method: documentType,
+      amount: 0,
+      reference: cleanDocId,
+      date: 'Just now',
+      status: 'Pending'
+    };
+    setAdminRequests(prev => [newKycReq, ...prev]);
+
+    try {
+      await userAPI.submitKyc({ documentType, documentId: cleanDocId }).catch(() => null);
+    } catch (e) {}
+
+    showToast('KYC documents submitted successfully! Status: Under Review by Admin.');
   };
 
   // Sync to localStorage
@@ -1058,6 +1099,39 @@ export function AppProvider({ children }) {
       return;
     }
 
+    // If it was a KYC Verification request
+    if (targetReq.type.toLowerCase().includes('kyc')) {
+      setUser(prev => {
+        if (!prev) return prev;
+        if (targetReq.userId && prev.id === targetReq.userId) {
+          return { ...prev, kycStatus: 'VERIFIED', kycVerified: true };
+        }
+        return prev;
+      });
+
+      try {
+        if (targetReq.userId) {
+          adminAPI.approveKyc(targetReq.userId).catch(() => null);
+        }
+      } catch (e) {}
+
+      setAdminRequests(prev => prev.map(req => {
+        if (req.id === reqId) {
+          return {
+            ...req,
+            status: 'Approved',
+            reviewedBy: user?.name || 'Administrator',
+            reviewedAt: new Date().toISOString(),
+            reviewNotes
+          };
+        }
+        return req;
+      }));
+
+      showToast(`KYC for ${targetReq.user} has been APPROVED! Account is now Verified.`);
+      return;
+    }
+
     // If it was a pending deposit, release verified funds to user's Main Wallet
     if (targetReq.type === 'deposit') {
       setUser(prev => ({
@@ -1105,6 +1179,39 @@ export function AppProvider({ children }) {
 
     if (targetReq.status === 'Approved') {
       showToast('Approved requests cannot be directly rejected. Use auditable adjustments.', 'error');
+      return;
+    }
+
+    // If it was a KYC Verification request
+    if (targetReq.type.toLowerCase().includes('kyc')) {
+      setUser(prev => {
+        if (!prev) return prev;
+        if (targetReq.userId && prev.id === targetReq.userId) {
+          return { ...prev, kycStatus: 'UNVERIFIED', kycVerified: false };
+        }
+        return prev;
+      });
+
+      try {
+        if (targetReq.userId) {
+          adminAPI.rejectKyc(targetReq.userId, { reason: reviewNotes }).catch(() => null);
+        }
+      } catch (e) {}
+
+      setAdminRequests(prev => prev.map(r => {
+        if (r.id === reqId) {
+          return {
+            ...r,
+            status: 'Rejected',
+            reviewedBy: user?.name || 'Administrator',
+            reviewedAt: new Date().toISOString(),
+            reviewNotes
+          };
+        }
+        return r;
+      }));
+
+      showToast(`KYC for ${targetReq.user} has been REJECTED.`);
       return;
     }
 

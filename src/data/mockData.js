@@ -2,35 +2,35 @@
 // Based on UNICORN_Project_Requirements_Summary.pdf & Unicorn Mobile App Designs
 
 export const INITIAL_USER = {
-  id: 'UNC-88294',
-  name: 'Rutajeet Mukherjee',
-  initials: 'RM',
-  email: 'rutajeet@unicorn.io',
-  phone: '+91 98765 43210',
-  role: 'user', // Normal investor user: Admin options are hidden
-  rank: 'Gold Unicorn',
-  kycStatus: 'VERIFIED', // 'VERIFIED' | 'PENDING' | 'UNVERIFIED'
-  twoFactorEnabled: true,
-  twoFactorSecret: 'UNICORN-2FA-SEC-88294',
+  id: 'UNC-10001',
+  name: 'Investor User',
+  initials: 'IU',
+  email: 'investor@unicorn.vip',
+  phone: '+91 98765 00000',
+  role: 'user',
+  rank: 'Starter Unicorn',
+  kycStatus: 'UNVERIFIED', // Brand new account is UNVERIFIED until Admin reviews & approves
+  twoFactorEnabled: false,
+  twoFactorSecret: '',
   web3Connected: false,
   web3Address: '',
-  referralCode: 'UNC88294',
-  referralLink: 'https://unicorn.io/join?ref=UNC88294',
-  sponsor: 'UNC-70012 (Arjun K.)',
+  referralCode: 'UNC10001',
+  referralLink: 'https://unicorn.vip/join?ref=UNC10001',
+  sponsor: 'None',
   
-  // Wallet Balances in INR
-  mainWalletBalance: 150000,    // Ready to invest
-  roiWalletBalance: 54000,      // Daily ROI earnings
-  referralWalletBalance: 38750, // Commissions & bonuses
+  // Wallet Balances in INR strictly 0
+  mainWalletBalance: 0,
+  roiWalletBalance: 0,
+  referralWalletBalance: 0,
   
-  // Stats
-  activeInvestedAmount: 500000, // Premium Wealth package
-  todayRoiIncome: 2250,
-  todayReferralIncome: 1125,
-  directBusiness: 1250000,      // For Achiever Bonus
-  teamBusiness: 8500000,        // For Rank Reward Bonus
-  totalDirects: 4,              // Number of direct active referrals
-  joinedDate: '12 Sep 2026',
+  // Stats strictly 0
+  activeInvestedAmount: 0,
+  todayRoiIncome: 0,
+  todayReferralIncome: 0,
+  directBusiness: 0,
+  teamBusiness: 0,
+  totalDirects: 0,
+  joinedDate: ''
 };
 
 // Super Admin User Profile
@@ -359,38 +359,5 @@ export const INITIAL_NOTIFICATIONS = [
 ];
 
 // Admin Platform Data
-export const INITIAL_ADMIN_PENDING_REQUESTS = [
-  {
-    id: 'DEP-REQ-101',
-    type: 'deposit',
-    user: 'Deepak Chopra (UNC-77182)',
-    method: 'INR (UPI)',
-    amount: 50000,
-    reference: 'UTR: 409182390141',
-    date: 'Just now',
-    status: 'Pending'
-  },
-  {
-    id: 'DEP-REQ-102',
-    type: 'deposit',
-    user: 'Kavita Sundaram (UNC-91204)',
-    method: 'USDT (BEP-20)',
-    amount: 250000,
-    reference: '0x9ca729...e491',
-    date: '12 min ago',
-    status: 'Pending'
-  },
-  {
-    id: 'WTH-REQ-201',
-    type: 'withdrawal',
-    user: 'Rutajeet Mukherjee (UNC-88294)',
-    method: 'USDT (BEP-20)',
-    amount: 15000,
-    reference: '0x71C5A869d2319fBc9057bA27218Ac9bB38A9',
-    walletSource: 'ROI Wallet',
-    date: '35 min ago',
-    twoFactorVerified: true,
-    status: 'Pending'
-  }
-];
+export const INITIAL_ADMIN_PENDING_REQUESTS = [];
 

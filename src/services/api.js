@@ -75,10 +75,18 @@ export const referralAPI = {
   getOverview: () => request('/referral/overview')
 };
 
-// 5. Admin Console Management
+// 5. User Profile & KYC
+export const userAPI = {
+  getProfile: () => request('/user/profile'),
+  submitKyc: (body) => request('/user/kyc', { method: 'POST', body: JSON.stringify(body) })
+};
+
+// 6. Admin Console Management
 export const adminAPI = {
   getMetrics: () => request('/admin/metrics'),
   getUsers: () => request('/admin/users'),
+  approveKyc: (userId) => request(`/admin/users/${userId}/kyc/approve`, { method: 'POST' }),
+  rejectKyc: (userId, body) => request(`/admin/users/${userId}/kyc/reject`, { method: 'POST', body: JSON.stringify(body) }),
   getDeposits: () => request('/admin/deposits'),
   approveDeposit: (id) => request(`/admin/deposits/${id}/approve`, { method: 'POST' }),
   rejectDeposit: (id) => request(`/admin/deposits/${id}/reject`, { method: 'POST' }),

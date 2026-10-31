@@ -3,6 +3,7 @@ const Investment = require('../models/Investment');
 const Transaction = require('../models/Transaction');
 const ReferralIncome = require('../models/ReferralIncome');
 const Reward = require('../models/Reward');
+const AuditLog = require('../models/AuditLog');
 const ledgerService = require('../services/ledgerService');
 const { getUserBusinessVolumes } = require('../services/rewardService');
 const ApiError = require('../utils/ApiError');
@@ -270,6 +271,46 @@ exports.getEarnings = async (req, res, next) => {
         totalReferral,
         totalRank,
         totalEarnings: totalRoi + totalReferral + totalRank
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 6. Submit KYC Documents for Admin Review
+exports.submitKyc = async (req, res, next) => {
+  try {
+    const { documentType, documentId } = req.body;
+    if (!documentId) return next(new ApiError(400, 'Document ID / Number is required.'));
+
+    const user = await User.findById(req.user._id);
+    if (!user) return next(new ApiError(404, 'User not found.'));
+
+    user.kycStatus = 'PENDING';
+    user.kycDocumentType = documentType || 'Government ID';
+    user.kycDocumentId = String(documentId).trim();
+    user.kycSubmittedAt = new Date();
+    await user.save();
+
+    await AuditLog.create({
+      performedBy: user._id,
+      action: 'KYC_SUBMITTED',
+      entityType: 'User',
+      entityId: user._id,
+      details: { documentType: user.kycDocumentType, documentId: user.kycDocumentId }
+    });
+
+    res.json({
+      success: true,
+      message: 'KYC documents submitted successfully. Status is now PENDING admin review.',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        kycStatus: user.kycStatus,
+        kycDocumentType: user.kycDocumentType,
+        kycDocumentId: user.kycDocumentId
       }
     });
   } catch (error) {
