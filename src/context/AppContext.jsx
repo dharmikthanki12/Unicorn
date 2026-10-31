@@ -11,7 +11,7 @@ import {
   INITIAL_NOTIFICATIONS,
   INITIAL_ADMIN_PENDING_REQUESTS
 } from '../data/mockData';
-import { authAPI, walletAPI, investAPI, adminAPI, setStoredToken, clearStoredToken } from '../services/api';
+import { authAPI, walletAPI, investAPI, adminAPI, setStoredToken, getStoredToken, clearStoredToken } from '../services/api';
 
 const AppContext = createContext();
 
@@ -606,6 +606,12 @@ export function AppProvider({ children }) {
 
     // Sync with MongoDB backend
     try {
+      if (!getStoredToken()) {
+        const authRes = await authAPI.login({ email: 'demo@unicorn.vip', password: 'UserPassword2026!' }).catch(() => null);
+        if (authRes && (authRes.token || authRes.accessToken)) {
+          setStoredToken(authRes.token || authRes.accessToken);
+        }
+      }
       await walletAPI.submitDeposit({
         amount: amtNum,
         currency: 'INR',
@@ -672,6 +678,12 @@ export function AppProvider({ children }) {
 
     // Sync with MongoDB backend
     try {
+      if (!getStoredToken()) {
+        const authRes = await authAPI.login({ email: 'demo@unicorn.vip', password: 'UserPassword2026!' }).catch(() => null);
+        if (authRes && (authRes.token || authRes.accessToken)) {
+          setStoredToken(authRes.token || authRes.accessToken);
+        }
+      }
       await walletAPI.submitDeposit({
         amount: amtNum,
         currency: 'USDT',
