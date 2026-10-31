@@ -11,7 +11,7 @@ import {
   INITIAL_NOTIFICATIONS,
   INITIAL_ADMIN_PENDING_REQUESTS
 } from '../data/mockData';
-import { authAPI, setStoredToken, clearStoredToken } from '../services/api';
+import { authAPI, walletAPI, investAPI, adminAPI, setStoredToken, clearStoredToken } from '../services/api';
 
 const AppContext = createContext();
 
@@ -593,8 +593,22 @@ export function AppProvider({ children }) {
   };
 
   // Submit INR Deposit
-  const submitInrDeposit = (utrNumber, amount) => {
+  const submitInrDeposit = async (utrNumber, amount) => {
     const amtNum = Number(amount) || Number(depositAmount) || 100000;
+    const ref = utrNumber || `UTR${Date.now()}`;
+
+    // Sync with MongoDB backend
+    try {
+      await walletAPI.submitDeposit({
+        amount: amtNum,
+        currency: 'INR',
+        paymentMethod: 'INR (UPI)',
+        transactionReference: ref
+      }).catch(err => console.warn('Backend deposit notice:', err.message));
+    } catch (e) {
+      console.warn('Backend deposit notice:', e.message);
+    }
+
     const newTx = {
       id: `TXN-${Math.floor(10000 + Math.random() * 90000)}`,
       type: 'deposit',
@@ -605,7 +619,7 @@ export function AppProvider({ children }) {
       amount: amtNum,
       amountFormatted: `+₹${amtNum.toLocaleString('en-IN')}`,
       status: 'Pending Approval',
-      txHash: `UTR: ${utrNumber || '389104829104'}`,
+      txHash: `UTR: ${ref}`,
       wallet: 'Main Deposit Wallet'
     };
 
@@ -615,7 +629,7 @@ export function AppProvider({ children }) {
       user: `${user.name} (${user.id})`,
       method: 'INR (UPI)',
       amount: amtNum,
-      reference: `UTR: ${utrNumber || '389104829104'}`,
+      reference: `UTR: ${ref}`,
       date: 'Just now',
       status: 'Pending'
     };
@@ -646,8 +660,23 @@ export function AppProvider({ children }) {
   };
 
   // Submit USDT Deposit
-  const submitUsdtDeposit = (txHash, amount) => {
+  const submitUsdtDeposit = async (txHash, amount) => {
     const amtNum = Number(amount) || Number(depositAmount) || 100000;
+    const hash = txHash || `0x${Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+
+    // Sync with MongoDB backend
+    try {
+      await walletAPI.submitDeposit({
+        amount: amtNum,
+        currency: 'USDT',
+        paymentMethod: 'USDT (BEP-20)',
+        blockchainTxHash: hash,
+        transactionReference: hash
+      }).catch(err => console.warn('Backend deposit notice:', err.message));
+    } catch (e) {
+      console.warn('Backend deposit notice:', e.message);
+    }
+
     const newTx = {
       id: `TXN-${Math.floor(10000 + Math.random() * 90000)}`,
       type: 'deposit',
@@ -658,7 +687,7 @@ export function AppProvider({ children }) {
       amount: amtNum,
       amountFormatted: `+₹${amtNum.toLocaleString('en-IN')}`,
       status: 'Completed',
-      txHash: txHash || '0x4f8a...9c2e',
+      txHash: hash,
       wallet: 'Main Deposit Wallet'
     };
 
@@ -684,13 +713,20 @@ export function AppProvider({ children }) {
   };
 
   // Invest in a Package
-  const investInPackage = (pkgId) => {
+  const investInPackage = async (pkgId) => {
     const pkg = packages.find(p => p.id === pkgId);
     if (!pkg) return;
 
     if (user.mainWalletBalance < pkg.amount) {
       showToast(`Insufficient balance in Main Wallet! Available: ₹${user.mainWalletBalance.toLocaleString('en-IN')}`, 'error');
       return;
+    }
+
+    // Sync with MongoDB backend
+    try {
+      await investAPI.invest(pkg.id).catch(err => console.warn('Backend invest notice:', err.message));
+    } catch (e) {
+      console.warn('Backend invest notice:', e.message);
     }
 
     const newTx = {
@@ -818,6 +854,19 @@ export function AppProvider({ children }) {
       status: 'Pending'
     };
 
+    // Sync with MongoDB backend
+    try {
+      walletAPI.submitWithdrawal({
+        fromWallet: walletType,
+        amount,
+        paymentMethod: method === 'upi' ? 'INR (UPI)' : 'USDT (BEP-20)',
+        destinationAddress: destination,
+        otp: enteredCode
+      }).catch(err => console.warn('Backend withdrawal notice:', err.message));
+    } catch (e) {
+      console.warn('Backend withdrawal notice:', e.message);
+    }
+
     setTransactions(prev => [newTx, ...prev]);
     setAdminRequests(prev => [adminReq, ...prev]);
 
@@ -851,6 +900,13 @@ export function AppProvider({ children }) {
     if (fromWallet === 'referral' && user.referralWalletBalance < amtNum) {
       showToast('Insufficient Referral Wallet balance', 'error');
       return;
+    }
+
+    // Sync with MongoDB backend
+    try {
+      walletAPI.transferToMain({ fromWallet, amount: amtNum }).catch(err => console.warn('Backend transfer notice:', err.message));
+    } catch (e) {
+      console.warn('Backend transfer notice:', e.message);
     }
 
     setUser(prev => ({

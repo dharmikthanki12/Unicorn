@@ -63,7 +63,7 @@ const userSchema = new mongoose.Schema({
   walletAddress: {
     type: String,
     trim: true,
-    default: ''
+    default: null
   },
   walletNonce: {
     type: String,

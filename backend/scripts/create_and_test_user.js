@@ -29,10 +29,11 @@ async function createAndTestUser() {
     console.log(`📊 Current Users Count in Atlas: ${initialCount}`);
 
     // 2. Define test user credentials
-    const testEmail = `dharmik_${Date.now().toString().slice(-4)}@unicorn.vip`;
+    const timestamp = Date.now().toString().slice(-4);
+    const testEmail = `dharmik_${timestamp}@unicorn.vip`;
     const testName = 'Dharmik Thanki';
     const testPassword = 'Unicorn2026!Secure';
-    const testWallet = '0xAf05728a52994eB7cbF81f1B2B709503953C9C0B';
+    const testWallet = `0x${Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('')}`;
     const testRefCode = `UNC${Math.floor(1000 + Math.random() * 9000)}`;
 
     console.log('\n--- Creating New User in MongoDB Atlas ---');

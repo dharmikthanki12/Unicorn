@@ -3,7 +3,7 @@
  * Connects React UI to Node.js / Express backend with JWT session management
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const TOKEN_KEY = 'unicorn_auth_token';
 

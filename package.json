@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node start-dev.js",
+    "client": "vite",
     "backend": "node backend/server.js",
     "server": "node backend/server.js",
     "test:backend": "node backend/test/suite.test.js",

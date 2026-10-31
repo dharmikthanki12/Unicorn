@@ -38,7 +38,7 @@ exports.register = async (req, res, next) => {
           role: 'user',
           referralCode: 'UNC' + Math.floor(1000 + Math.random() * 9000),
           referredBy: referralCode || null,
-          walletAddress: walletAddress || '',
+          walletAddress: walletAddress ? walletAddress.trim() : null,
           kycStatus: 'UNVERIFIED'
         }
       });
@@ -77,7 +77,7 @@ exports.register = async (req, res, next) => {
       referralCode: userReferralCode,
       referredBy: sponsor ? sponsor.referralCode : null,
       sponsorId: sponsor ? sponsor._id : null,
-      walletAddress: walletAddress || '',
+      walletAddress: walletAddress ? walletAddress.trim() : null,
       role: 'user',
       status: 'active',
       lastLoginAt: new Date()
