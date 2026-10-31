@@ -109,7 +109,7 @@ export function DashboardPage() {
             <button
               onClick={() => navigateTo('invest')}
               className="btnp btnw"
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', padding: '12px 28px', fontSize: '15px', fontWeight: 600 }}
             >
               <span className="gt">Invest</span>
             </button>
@@ -117,192 +117,40 @@ export function DashboardPage() {
             <button
               onClick={() => setShowTransferModal(true)}
               className="btnp"
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', padding: '12px 28px', fontSize: '15px', fontWeight: 600 }}
             >
               Transfer
             </button>
-
-            <button
-              onClick={() => navigateTo('deposit')}
-              className="btnp"
-              style={{ cursor: 'pointer' }}
-            >
-              Deposit
-            </button>
-
-            <button
-              onClick={() => navigateTo('withdraw')}
-              className="btnp"
-              style={{ cursor: 'pointer' }}
-            >
-              Withdraw
-            </button>
           </div>
 
-          {/* Web3 BEP-20 Wallet Connectivity Card */}
-          {user && (
-            <div
-              className="card"
-              style={{
-                padding: '16px 20px',
-                borderRadius: '16px',
-                border: isWalletConnected ? '1px solid rgba(94, 224, 168, 0.35)' : '1px solid var(--border)',
-                background: isWalletConnected
-                  ? 'linear-gradient(135deg, rgba(94, 224, 168, 0.08), rgba(181, 92, 169, 0.06))'
-                  : 'var(--surface2)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '20px' }}>🦊</span>
-                  <div>
-                    <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text)', display: 'block' }}>
-                      BNB Smart Chain (BEP-20)
-                    </span>
-                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                      Web3 Smart Contract & Payout Rail
-                    </span>
-                  </div>
-                </div>
-                <span
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    padding: '3px 10px',
-                    borderRadius: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    background: isWalletConnected ? 'rgba(94, 224, 168, 0.15)' : 'rgba(143, 148, 171, 0.15)',
-                    color: isWalletConnected ? 'var(--pos)' : 'var(--muted)'
-                  }}
-                >
-                  <span
-                    style={{
-                      width: '7px',
-                      height: '7px',
-                      borderRadius: '50%',
-                      background: isWalletConnected ? 'var(--pos)' : 'var(--muted)'
-                    }}
-                  />
-                  {isWalletConnected ? 'MetaMask Connected' : 'Wallet Not Connected'}
-                </span>
-              </div>
-
-              {isWalletConnected && currentWalletAddress ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border2)',
-                    borderRadius: '10px',
-                    padding: '8px 12px',
-                    gap: '8px'
-                  }}>
-                    <span className="num" style={{ fontSize: '13px', color: 'var(--text)', wordBreak: 'break-all' }}>
-                      {currentWalletAddress}
-                    </span>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(currentWalletAddress);
-                        showToast('BEP-20 Wallet address copied!');
-                      }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--accent-text)',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        flexShrink: 0
-                      }}
-                    >
-                      Copy
-                    </button>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
-                    <a
-                      href={`https://testnet.bscscan.com/address/${currentWalletAddress}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ color: 'var(--muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
-                    >
-                      View on BscScan ↗
-                    </a>
-                    <button
-                      onClick={disconnectWeb3Wallet}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#ef4444',
-                        fontWeight: 600,
-                        fontSize: '12px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Disconnect Wallet
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                  <p style={{ margin: 0, fontSize: '13px', color: 'var(--muted)', maxWidth: '320px' }}>
-                    Connect your MetaMask wallet to enable on-chain USDT deposits and receive direct BEP-20 payouts.
-                  </p>
-                  <button
-                    onClick={connectWeb3Wallet}
-                    className="btnp"
-                    style={{
-                      padding: '8px 18px',
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <span>🦊 Connect MetaMask</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Income Section */}
-          <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Income</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '12px' }}>
+          <section style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: 'var(--text)' }}>Income</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '14px' }}>
               {/* ROI Income Card */}
-              <div className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--accent-text)' }}>
                   <Icon d={ICONS.invest} size={20} />
-                  <span style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text)' }}>ROI Income</span>
+                  <span style={{ fontSize: '15px', fontWeight: 500, color: 'var(--muted)' }}>ROI income</span>
                 </div>
-                <span className="num" style={{ fontSize: '32px', fontWeight: 600 }}>
+                <span className="num" style={{ fontSize: '36px', fontWeight: 600, letterSpacing: '-0.02em' }}>
                   ₹{roiWalletBalance.toLocaleString('en-IN')}
                 </span>
-                <span style={{ fontSize: '13px', color: 'var(--pos)' }}>
+                <span style={{ fontSize: '13px', color: 'var(--pos)', fontWeight: 500 }}>
                   Today +₹{todayRoiIncome.toLocaleString('en-IN')} (0.45%)
                 </span>
               </div>
 
               {/* Referral Income Card */}
-              <div className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--accent-text)' }}>
                   <Icon d={ICONS.referral} size={20} />
-                  <span style={{ fontSize: '15px', fontWeight: 500, color: 'var(--text)' }}>Referral Income</span>
+                  <span style={{ fontSize: '15px', fontWeight: 500, color: 'var(--muted)' }}>Referral income</span>
                 </div>
-                <span className="num" style={{ fontSize: '32px', fontWeight: 600 }}>
+                <span className="num" style={{ fontSize: '36px', fontWeight: 600, letterSpacing: '-0.02em' }}>
                   ₹{referralWalletBalance.toLocaleString('en-IN')}
                 </span>
-                <span style={{ fontSize: '13px', color: 'var(--pos)' }}>
+                <span style={{ fontSize: '13px', color: 'var(--pos)', fontWeight: 500 }}>
                   Today +₹{todayReferralIncome.toLocaleString('en-IN')}
                 </span>
               </div>

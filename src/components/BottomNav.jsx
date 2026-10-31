@@ -8,10 +8,10 @@ export function BottomNav() {
   if (activeScreen === 'landing' || !user) return null;
 
   const tabs = [
-    { id: 'home', label: 'Dashboard', icon: ICONS.home },
-    { id: 'invest', label: 'Invest', icon: ICONS.invest },
+    { id: 'home', label: 'Home', icon: ICONS.home },
     { id: 'deposit', label: 'Deposit', icon: ICONS.deposit },
-    { id: 'withdraw', label: 'Withdraw', icon: ICONS.wallet },
+    { id: 'invest', label: 'Invest', icon: ICONS.invest },
+    { id: 'transactions', label: 'Transactions', icon: ICONS.history },
     { id: 'referral', label: 'Referral', icon: ICONS.referral }
   ];
 
@@ -21,7 +21,7 @@ export function BottomNav() {
       return ['deposit', 'deposit-amount', 'deposit-method', 'deposit-inr', 'deposit-usdt'].includes(activeScreen);
     }
     if (tabId === 'invest') return activeScreen === 'invest';
-    if (tabId === 'withdraw') return activeScreen === 'withdraw';
+    if (tabId === 'transactions') return activeScreen === 'transactions';
     if (tabId === 'referral') return activeScreen === 'referral';
     return false;
   };
