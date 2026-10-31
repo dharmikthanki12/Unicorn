@@ -18,32 +18,13 @@ async function cleanDemoData() {
 
   const db = mongoose.connection.db;
 
-  // 1. Identify Demo Users to Delete
-  // All demo accounts: investor_*, test*, rutajeet*, demo*, dharmik_*
-  const demoUserFilter = {
-    $or: [
-      { email: { $regex: /^investor_/i } },
-      { email: { $regex: /^demo@/i } },
-      { email: { $regex: /^test/i } },
-      { email: { $regex: /^rutajeet/i } },
-      { email: { $regex: /^dharmik_\d+/i } }
-    ]
-  };
+  // 1. Wipe all users
+  const userDeleteResult = await db.collection('users').deleteMany({});
+  console.log(`\n✔ Deleted ${userDeleteResult.deletedCount} users from 'users' collection.`);
 
-  const demoUsers = await db.collection('users').find(demoUserFilter).toArray();
-  const demoUserIds = demoUsers.map(u => u._id);
-  console.log(`Found ${demoUsers.length} demo users to remove:`);
-  demoUsers.forEach(u => console.log(`  - ${u.email} (${u.name})`));
-
-  // 2. Delete Demo Users
-  const userDeleteResult = await db.collection('users').deleteMany(demoUserFilter);
-  console.log(`\n✔ Deleted ${userDeleteResult.deletedCount} demo users from 'users' collection.`);
-
-  // 3. Delete Wallets belonging to demo users or orphaned
-  const walletDeleteResult = await db.collection('wallets').deleteMany({
-    userId: { $in: demoUserIds }
-  });
-  console.log(`✔ Deleted ${walletDeleteResult.deletedCount} demo wallets from 'wallets' collection.`);
+  // 2. Wipe all wallets
+  const walletDeleteResult = await db.collection('wallets').deleteMany({});
+  console.log(`✔ Deleted ${walletDeleteResult.deletedCount} wallets from 'wallets' collection.`);
 
   // 4. Remove all test Deposits
   const depResult = await db.collection('deposits').deleteMany({});
@@ -80,17 +61,6 @@ async function cleanDemoData() {
   const auditResult = await db.collection('auditlogs').deleteMany({});
   console.log(`✔ Deleted ${auditResult.deletedCount} test records from 'auditlogs' collection.`);
 
-  // Reset remaining users' wallets (e.g., admin and niraj) to clean clean state
-  const remainingUsers = await db.collection('users').find({}).toArray();
-  console.log(`\nRemaining verified users in database (${remainingUsers.length}):`);
-  for (const ru of remainingUsers) {
-    console.log(`  • ${ru.email} (${ru.name}) [Role: ${ru.role}]`);
-    // Ensure clean wallet state
-    await db.collection('wallets').updateMany(
-      { userId: ru._id },
-      { $set: { balance: 0, balanceINR: 0, mainBalance: 0, roiBalance: 0, referralBalance: 0, reservedWithdrawal: 0 } }
-    );
-  }
 
   // 11. Final Collection Status
   console.log('\n========================================================');
@@ -113,3 +83,4 @@ cleanDemoData().catch(err => {
   console.error('❌ Error during cleanup:', err);
   process.exit(1);
 });
+
