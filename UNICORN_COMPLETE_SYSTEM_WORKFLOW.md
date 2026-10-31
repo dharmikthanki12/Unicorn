@@ -1,262 +1,383 @@
-# UNICORN Web3 Platform — Complete End-to-End System Workflow
+# UNICORN Web3 Platform — Complete End-to-End Backend Workflow
 
-## 1. Executive Architectural Blueprint
+## 1. System Architectural Overview
 
-The UNICORN ecosystem is built upon an isolated **Three-Wallet Ledger Architecture**, an automated **0.45% Daily ROI Yield Engine (Mon–Fri)**, a **Dual-Rail Deposit System (INR UPI + BEP-20 USDT)**, a **Multi-Tier Community Override Matrix**, and a **Mandatory 2FA Withdrawal Pipeline**.
+The UNICORN backend is an enterprise-grade Node.js / Express & MongoDB financial ledger application engineered for high-concurrency staking, auditable dual-rail payment processing (Fiat UPI and Web3 BEP-20 USDT), an automated **0.45% Daily Simple ROI Engine (22 earning days per month)**, a **Multi-Level Referral Matrix**, and **Time-based One-Time Password (TOTP) 2FA** withdrawal security.
 
 ```mermaid
 flowchart TD
-    subgraph Inbound["1. Inbound Capital Dual-Rail"]
-        A1["UPI (INR Fiat Rail)"]
-        A2["USDT (BEP-20 Web3 Rail)"]
+    subgraph Clients["1. Clients & Ingress"]
+        C1["React Web App (SPA)"]
+        C2["Admin Operations Console"]
+        C3["Web3 Providers (MetaMask / BEP-20)"]
     end
 
-    subgraph CoreWallets["2. Three-Wallet Isolated Ledger"]
-        W1["Main Deposit Wallet<br/>(Ready to Invest)"]
-        W2["ROI Wallet<br/>(Daily Trading Returns)"]
-        W3["Referral Wallet<br/>(Commissions & Rewards)"]
+    subgraph DualRail["2. Inbound Capital Rails"]
+        R1["Rail A: INR Manual (UPI / UTR)"]
+        R2["Rail B: USDT Automatic (BEP-20 on BSC)"]
     end
 
-    subgraph Engines["3. Earning & Staking Engines"]
-        E1["Active Investment Contract<br/>(Locked Capital · 200 Days)"]
-        E2["0.45% Daily ROI Yield Engine<br/>(Mon–Fri · 22 Days/Mo = 9.9%)"]
-        E3["Multi-Tier Referral Engine<br/>(5% L1, 2% L2-5, 1% L6-10...)"]
-        E4["Achiever Club Travel Milestones<br/>(Goa, Andaman, Thailand, Dubai, Europe)"]
+    subgraph CoreLedger["3. Three-Wallet Isolated Financial Ledger"]
+        W1["Main Deposit Wallet<br/>(Staging & Staking Capital)"]
+        W2["ROI Wallet<br/>(Daily 0.45% Yields)"]
+        W3["Referral Wallet<br/>(ROI-on-ROI Commissions)"]
     end
 
-    subgraph Outbound["4. Outbound Withdrawal Pipeline"]
-        WD["Withdrawal Engine<br/>(Mandatory 6-Digit TOTP 2FA)"]
-        O1["Bank NEFT / UPI (INR)"]
-        O2["USDT BEP-20 (BSC Address)"]
+    subgraph YieldEngines["4. Financial Calculation Engines"]
+        E1["Staked Investment Contract<br/>(Tiers 1–7: ₹10K to ₹50L)"]
+        E2["Daily 0.45% Simple ROI Engine<br/>(Mon–Fri · Sat/Sun Paused · 22 Days/Mo)"]
+        E3["Multi-Level Referral Matrix<br/>(L1: 5%, L2-5: 2%, L6-10: 1%...)"]
+        E4["Achiever Club Volume Tracker<br/>(Goa, Andaman, Thailand, Dubai, Europe)"]
     end
 
-    A1 -->|12-Digit UTR Verification| W1
-    A2 -->|On-Chain BEP-20 Confirmation| W1
-    W1 -->|Package Staking Purchase| E1
-    E1 -->|0.45% Daily Accrual| E2
-    E2 -->|Direct Credit| W2
-    E2 -->|ROI-on-ROI Override| E3
+    subgraph OutboundPipeline["5. Withdrawal & Compliance Pipeline"]
+        WD["Withdrawal Controller<br/>(Mandatory 6-Digit TOTP 2FA)"]
+        RES["Ledger Reservation Quarantine<br/>(Prevents Double-Spending)"]
+        ADM["Admin Operations Review & Payout"]
+    end
+
+    C1 -->|Submit UTR| R1
+    C1 -->|Submit BSC TxHash| R2
+    R1 -->|Admin Review & Manual Approval| W1
+    R2 -->|Independent BSC On-Chain Verification| W1
+
+    W1 -->|Activate Package Tier| E1
+    E1 -->|Automated Daily Accrual| E2
+    E2 -->|Idempotent Credit| W2
+    E2 -->|ROI-on-ROI Commission| E3
     E3 -->|Direct Credit| W3
-    E1 -->|Volume Accumulation| E4
-    W2 -->|Source 1| WD
-    W3 -->|Source 2| WD
-    WD -->|Fiat Settlement| O1
-    WD -->|Crypto Settlement| O2
+    E1 -->|Direct Volume Tracking| E4
+
+    W2 -->|Payout Source 1| WD
+    W3 -->|Payout Source 2| WD
+    WD -->|Verify TOTP 2FA| RES
+    RES --> ADM
+    ADM -->|Fiat UPI / Crypto Payout| C1
 ```
 
 ---
 
-## 2. Inbound Capital & Dual-Rail Deposit Workflow
+## 2. Directory Structure & Module Responsibilities
 
-### Detailed Rail Logic
-1. **Currency & Rail Selection**:
-   - The user selects currency: **INR (₹)** or **USD / USDT ($)** (Standard platform peg: $1\text{ USDT} = ₹100\text{ INR}$).
-2. **Rail A: INR UPI Dynamic Verification**:
-   - The interface generates a dynamic UPI payment QR code and provides the platform VPA (`unicorn@okaxis`).
-   - The user completes payment using PhonePe, Google Pay, Paytm, or BHIM.
-   - The user enters their 12-digit **UTR / Reference Number**.
-   - Submits `POST /api/wallet/deposit` $\rightarrow$ Created in Atlas `deposits` collection with status `PENDING`.
-   - Admin approves transaction in Admin Console $\rightarrow$ Credits `MAIN` wallet balance and writes an immutable double-entry record to `financialledgers`.
-3. **Rail B: USDT (BEP-20) Smart Contract Rail**:
-   - Displays dedicated platform BNB Smart Chain deposit address (`0xAf057...`) and QR code.
-   - User transfers USDT from MetaMask, Trust Wallet, or Binance.
-   - Submits transaction hash $\rightarrow$ Verified via blockchain scanner $\rightarrow$ Main Deposit Wallet auto-credited.
+```
+backend/
+├── config/
+│   └── database.js                # MongoDB Atlas connection pool & DNS resilience
+├── controllers/
+│   ├── adminController.js         # Operations center, queues, metrics, audit logs
+│   ├── authController.js          # Authentication, JWT rotation, Web3 signatures
+│   ├── depositController.js       # Dual-rail deposit logic (INR manual + USDT auto)
+│   ├── investmentController.js    # Package purchases, staking contracts, activation
+│   ├── packageController.js       # Investment package CRUD (7 tiers)
+│   ├── referralController.js      # Downline tree, unilevel hierarchy, direct stats
+│   ├── rewardController.js        # Rank milestones & Achiever bonus rewards
+│   ├── transactionController.js   # Auditable financial transaction ledger
+│   ├── userController.js          # Profile management, Web3 wallet sync, KYC
+│   ├── walletController.js        # Wallet balances, internal transfers
+│   └── withdrawalController.js    # 2FA verification, reservations, payouts
+├── jobs/
+│   ├── achieverJob.js             # 4-month direct volume achiever trip evaluator
+│   ├── depositConfirmJob.js       # Periodic BSC blockchain confirmation poller
+│   ├── maturityJob.js             # Investment lifecycle & maturity evaluator
+│   ├── rankJob.js                 # Rank bonus milestone evaluator (₹2.5L to ₹1Cr)
+│   ├── roiJob.js                  # Daily 0.45% Simple ROI Engine (Mon-Fri, Sat/Sun paused)
+│   ├── volumeTrackerJob.js        # Team business volume rollups
+│   └── withdrawalReconciliationJob.js # Payout reconciliation & reserve release
+├── middleware/
+│   ├── adminMiddleware.js         # Role-based access control (Admin strictly)
+│   ├── authMiddleware.js          # JWT bearer token verification
+│   ├── errorMiddleware.js         # Centralized error handler
+│   └── validationMiddleware.js    # Express-validator input sanitizers
+├── models/
+│   ├── AchieverBonus.js           # Achiever trip qualifications
+│   ├── AuditLog.js                # Immutable administrative audit trail
+│   ├── Deposit.js                 # Deposit requests & verification records
+│   ├── Investment.js              # Active staking contracts
+│   ├── Package.js                 # 7 Official Investment Packages
+│   ├── PlatformSettings.js        # Centralized business parameters & public holidays
+│   ├── RankReward.js              # One-time rank bonus rewards
+│   ├── Referral.js                # Downline link graph
+│   ├── ReferralIncome.js          # Commission credit records
+│   ├── User.js                    # User accounts, KYC, 2FA secrets
+│   ├── Wallet.js                  # 3-Wallet isolated balances & reserves
+│   └── Withdrawal.js              # Withdrawal requests & payouts
+├── routes/                        # Express API route declarations
+├── services/
+│   ├── blockchainService.js       # BEP-20 USDT on-chain verification via BSC RPC
+│   ├── emailService.js            # Transaction & security notifications
+│   ├── ledgerService.js           # Double-entry ledger math & atomic balance modifications
+│   ├── referralService.js         # Multi-level commission calculation logic
+│   └── rewardService.js           # Milestones & volume calculators
+├── test/
+│   ├── suite.test.js              # Core backend test suite (67 tests)
+│   └── roi_and_payment_scenarios.test.js # 17 Final specification scenarios (53 tests)
+└── server.js                      # Application bootstrap & background job scheduler
+```
+
+---
+
+## 3. Detailed Workflow Lifecycles
+
+### Phase 1: User Registration & 3-Wallet Ledger Initialization
+
+1. **Account Creation (`POST /api/auth/register`)**:
+   - Accepts `name`, `email`, `password`, and optional `referralCode`.
+   - Hashes password using `bcryptjs` (salt rounds = 10).
+   - Generates a unique user referral code (e.g., `UNC-4821`).
+   - Resolves upline sponsor if a referral code is provided.
+2. **Atomic 3-Wallet Provisioning**:
+   - Initializes 3 isolated wallet documents for the user with unique compound index `{ userId: 1, type: 1 }`:
+     - **MAIN**: Balance = ₹0. Capital staging wallet.
+     - **ROI**: Balance = ₹0, `reservedWithdrawal = 0`. Receives daily trading returns.
+     - **REFERRAL**: Balance = ₹0, `reservedWithdrawal = 0`. Receives team commissions.
+3. **Session Authentication (`POST /api/auth/login`)**:
+   - Returns short-lived Access Token (JWT, 15m) + secure Refresh Token (7d).
+
+---
+
+### Phase 2: Dual-Rail Inbound Capital & Deposit Workflows
+
+The platform accepts deposits through two distinct rails:
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as Investor
-    participant UI as Unicorn Web App
-    participant API as Express API (:5000)
+    actor Investor as Investor
+    participant Client as Web App
+    participant Controller as depositController
+    participant BSC as BSC RPC Provider
+    participant Ledger as ledgerService
     participant DB as MongoDB Atlas
-    actor Admin as Protocol Admin
+    actor Admin as Administrator
 
-    User->>UI: Enter Amount & Choose Method (UPI or USDT)
-    alt Method = INR UPI
-        UI->>User: Display UPI ID & Dynamic QR Code
-        User->>UI: Submits 12-Digit UTR Number
-        UI->>API: POST /api/wallet/deposit (amount, UTR, method='UPI')
-        API->>DB: Save to 'deposits' (status: 'PENDING')
-        Admin->>UI: Reviews Deposit in Admin Console
-        Admin->>API: PUT /api/admin/deposits/:id/approve
-        API->>DB: Update Deposit (status: 'APPROVED')
-        API->>DB: Atomic $inc on Main Wallet (+₹Amount)
-        API->>DB: Write LED-DEP to 'financialledgers'
-        API-->>UI: Real-time Main Balance Updated
-    else Method = USDT (BEP-20)
-        UI->>User: Display BSC Wallet Address & QR
-        User->>UI: Submits BEP-20 Transaction Hash
-        UI->>API: POST /api/wallet/deposit (amount, txHash, method='USDT')
-        API->>DB: Save to 'deposits' (status: 'APPROVED')
-        API->>DB: Atomic $inc on Main Wallet (+₹Amount)
-        API-->>UI: Main Balance Credited Immediately
+    alt Rail A: INR Manual Verification (UPI / Bank Transfer)
+        Investor->>Client: Enters INR Amount & Views UPI ID (unicornpay@hdfcbank)
+        Investor->>Client: Submits 12-Digit UTR Reference & Evidence
+        Client->>Controller: POST /api/deposit (amount, method: 'UPI', UTR)
+        Controller->>DB: Check duplicate UTR across non-rejected records
+        Controller->>DB: Create Deposit (status: 'pending', autoVerified: false)
+        Note over Controller,DB: Main Wallet is NOT credited yet!
+        Controller-->>Client: HTTP 201 (Status: Pending Admin Review)
+        Admin->>Controller: POST /api/admin/deposits/:id/approve (reviewNotes)
+        Note over Controller: Verify Admin != Deposit Owner (No Self-Approval)
+        Controller->>Ledger: credit({ wallet: 'main', amount })
+        Ledger->>DB: Atomic $inc on Main Wallet (+₹Amount)
+        Controller->>DB: Update Deposit (status: 'approved', reviewedBy, reviewedAt)
+        Controller->>DB: Write AuditLog (APPROVE_DEPOSIT)
+        Controller-->>Admin: HTTP 200 (Deposit Approved & Main Wallet Credited)
+    else Rail B: USDT Automatic Verification (BEP-20 on BNB Smart Chain)
+        Investor->>Client: Enters USDT Amount & Views BEP-20 Deposit Address
+        Investor->>Client: Transacts On-Chain & Submits BSC TxHash
+        Client->>Controller: POST /api/deposit (amount, method: 'USDT (BEP-20)', txHash)
+        Controller->>DB: Check duplicate TxHash
+        Controller->>BSC: verifyUsdtDepositOnChain(txHash, expectedRecipient, amount)
+        BSC->>BSC: Verify receipt.status === 1 (Execution Success)
+        BSC->>BSC: Parse Transfer(from, to, value) Event Logs
+        BSC->>BSC: Match Approved USDT Contract (0x55d39... / 0x33761...)
+        BSC->>BSC: Match Platform Deposit Wallet (0x9B15e...)
+        BSC->>BSC: Check Confirmations >= Required Threshold (>= 1)
+        alt All On-Chain Conditions Satisfied
+            Controller->>DB: Create Deposit (status: 'approved', autoVerified: true)
+            Controller->>Ledger: credit({ wallet: 'main', amount })
+            Ledger->>DB: Atomic $inc on Main Wallet (+₹Amount)
+            Controller->>DB: Write AuditLog (AUTO_APPROVE_USDT_DEPOSIT)
+            Controller-->>Client: HTTP 201 (Status: Approved & Auto-Credited)
+        else Confirmations Pending
+            Controller->>DB: Create Deposit (status: 'confirming', confirmations)
+            Controller-->>Client: HTTP 201 (Status: Confirming on BSC)
+        else Execution Reverted or Invalid Contract
+            Controller->>DB: Create Deposit (status: 'failed' or 'rejected')
+            Controller-->>Client: HTTP 201 (Status: Failed / Rejected - ₹0 Credited)
+        end
     end
 ```
 
----
+#### Deposit Status Reference
 
-## 3. Package Staking & Daily ROI Engine (0.45% Mon–Fri)
-
-### Mathematical Formulas & Rules
-$$\text{Daily Yield Rate } r = 0.45\% = 0.0045$$
-$$\text{Daily Return } = \text{Principal} \times 0.0045$$
-$$\text{Monthly Yield (22 Trading Days)} = \text{Principal} \times 0.0045 \times 22 = \text{Principal} \times 9.9\%$$
-
-> [!IMPORTANT]
-> **Weekend Exclusion Rule**: Trading days strictly operate **Monday through Friday**. Saturday and Sunday are zero-earning pause days. Each contract runs for **200 trading days** (approximately 9 calendar months), reaching $200 \times 0.45\% = 90\%$ total ROI yield + native UNC utility token airdrop.
-
-### Package Tier Matrix
-
-| Package Tier | Investment Amount | Daily Return (0.45%) | Monthly Yield (22 Days, 9.9%) | Native UNC Bonus |
-| :--- | :---: | :---: | :---: | :---: |
-| **Starter Package** | ₹10,000 ($100) | ₹45 | ₹990 | 1,000 UNC |
-| **Basic Growth** | ₹50,000 ($500) | ₹225 | ₹4,950 | 5,000 UNC |
-| **Pro Trader** | ₹2,50,000 ($2,500) | ₹1,125 | ₹24,750 | 25,000 UNC |
-| **Premium Wealth** | ₹5,00,000 ($5,000) | ₹2,250 | ₹49,500 | 50,000 UNC |
-| **Elite Portfolio** | ₹10,00,000 ($10,000) | ₹4,500 | ₹99,000 | 100,000 UNC |
-| **Diamond Whale** | ₹25,00,000 ($25,000) | ₹11,250 | ₹2,47,500 | 250,000 UNC |
-| **Crown Unicorn** | ₹50,00,000 ($50,000) | ₹22,500 | ₹4,95,000 | 500,000 UNC |
+| Rail | Allowed Statuses | Wallet Credited? | Transition Triggers |
+|:---|:---|:---:|:---|
+| **INR** | `pending` | No | Initial user submission with UTR. |
+| **INR** | `under_review` | No | Admin moves to compliance investigation. |
+| **INR** | `approved` | **Yes** | Admin explicitly approves after verifying bank credit. |
+| **INR** | `rejected` | No | Admin rejects due to invalid or unverified UTR. |
+| **USDT** | `detected` | No | TxHash detected, awaiting block inclusion. |
+| **USDT** | `confirming` | No | Mined on BSC, awaiting required block confirmations. |
+| **USDT** | `approved` | **Yes** | Independent on-chain verification confirmed (`autoVerified: true`). |
+| **USDT** | `failed` | No | Blockchain receipt execution reverted (`status === 0`). |
+| **USDT** | `rejected` | No | Sent to wrong recipient or used unapproved token contract. |
 
 ---
 
-## 4. Multi-Level Referral & Achiever Club Incentive Matrix
+### Phase 3: Package Staking / Investment Activation
 
-Referral commissions are calculated on **ROI-on-ROI** (daily earnings of downline members), ensuring zero principal dilution and sustainable tokenomics:
+- **Route**: `POST /api/investments`
+- **Controller**: [`investmentController.js`](file:///c:/Users/ISHA%20THANKI1/Desktop/unicorn/backend/controllers/investmentController.js)
+- **Rules**:
+  1. User selects 1 of the 7 predefined investment tiers.
+  2. Pre-check validates `mainWalletBalance >= packageAmount`.
+  3. Deducts amount from user's `MAIN` wallet via `ledgerService.debit`.
+  4. Creates an immutable `Investment` document:
+     - `amount`: Package principal
+     - `dailyRoiRate`: 0.0045 (0.45%)
+     - `dailyRoiAmount`: Exact integer calculation `Math.floor((Principal * 45) / 10000)`
+     - `status`: `'confirmed'` / `'ACTIVE'`
+     - `daysCredited`: 0
+     - `totalRoiEarned`: ₹0
+     - `lastRoiCalculationDate`: null
+
+#### Official 7 Package Tiers
+
+| Tier | Name | Capital (INR) | Capital (USDT) | Daily ROI (0.45%) | Monthly ROI (22 Trading Days) |
+|:---:|:---|---:|---:|---:|---:|
+| 1 | Starter | ₹10,000 | 100 USDT | ₹45 | ₹990 |
+| 2 | Basic | ₹50,000 | 500 USDT | ₹225 | ₹4,950 |
+| 3 | Pro | ₹2,50,000 | 2,500 USDT | ₹1,125 | ₹24,750 |
+| 4 | Premium | ₹5,00,000 | 5,000 USDT | ₹2,250 | ₹49,500 |
+| 5 | Elite | ₹10,00,000 | 10,000 USDT | ₹4,500 | ₹99,000 |
+| 6 | Platinum | ₹25,00,000 | 25,000 USDT | ₹11,250 | ₹2,47,500 |
+| 7 | VIP | ₹50,00,000 | 50,000 USDT | ₹22,500 | ₹4,95,000 |
+
+---
+
+### Phase 4: Daily 0.45% Simple ROI Yield Engine
+
+- **Service / Cron**: [`roiJob.js`](file:///c:/Users/ISHA%20THANKI1/Desktop/unicorn/backend/jobs/roiJob.js)
+- **Admin Trigger**: `POST /api/admin/roi/trigger`
+- **Execution Rules**:
+
+$$\text{Daily ROI} = \text{Eligible Principal} \times 0.0045$$
+$$\text{Monthly ROI (22 Trading Days)} = \text{Eligible Principal} \times 0.0045 \times 22 = \text{Principal} \times 9.9\%$$
+
+1. **Weekend Pause**:
+   - `today.getDay() === 0 || today.getDay() === 6` (Saturday & Sunday).
+   - Strictly awards **₹0 ROI**. No calculations run on weekends.
+2. **Configurable Public Holidays**:
+   - Checks `PlatformSettings.publicHolidays` (array of `YYYY-MM-DD`). Pauses calculation on official market holidays.
+3. **Idempotency & Server Restart Protection**:
+   - Validates `inv.lastRoiCalculationDate`: if date matches today, skips investment.
+   - Prevents duplicate credits if job retries or server restarts.
+4. **Simple Interest Only**:
+   - Calculations use integer math: `Math.floor((Principal * 45) / 10000)`.
+   - Never compounds yields into the principal.
+5. **Auditable Ledger Credit**:
+   - Directly credits the user's **ROI Wallet**.
+   - Increments `inv.daysCredited += 1` and `inv.totalRoiEarned += calculatedAmount`.
+
+---
+
+### Phase 5: Multi-Level Referral Distribution (ROI on ROI)
+
+- **Service**: [`referralService.js`](file:///c:/Users/ISHA%20THANKI1/Desktop/unicorn/backend/services/referralService.js)
+- **Trigger**: Automatically dispatched upon each eligible daily ROI credit.
+- **Rule**: Commissions are calculated **strictly from the daily ROI earned**, never from the original investment capital.
 
 ```mermaid
-graph TD
-    User["Your Account"]
-    L1["Level 1 (Directs)<br/>5% Override<br/>Req: ≥2 Directs"]
-    L2["Levels 2–5<br/>2% Override<br/>Req: ≥4 Directs"]
-    L3["Levels 6–10<br/>1% Override<br/>Req: ≥7 Directs"]
-    L4["Levels 11–25<br/>0.25% Override<br/>Req: ≥12 Directs"]
-    L5["Level 26+ (Infinity)<br/>0.125% Override<br/>Req: ≥15 Directs"]
-
-    User --> L1
-    L1 --> L2
-    L2 --> L3
-    L3 --> L4
-    L4 --> L5
+flowchart LR
+    A["Daily ROI Yield<br/>(e.g., ₹2,250)"] --> B["Upline Traversal<br/>(Up to 26+ Levels)"]
+    B --> C["Level 1 Sponsor<br/>Rate: 5% (₹113)<br/>Req: ≥2 Directs"]
+    B --> D["Levels 2–5 Sponsors<br/>Rate: 2% (₹45)<br/>Req: ≥4 Directs"]
+    B --> E["Levels 6–10 Sponsors<br/>Rate: 1% (₹23)<br/>Req: ≥7 Directs"]
+    B --> F["Levels 11–25 Sponsors<br/>Rate: 0.25% (₹6)<br/>Req: ≥12 Directs"]
+    B --> G["Level 26+ (Infinity)<br/>Rate: 0.125% (₹3)<br/>Req: ≥15 Directs"]
+    
+    C --> H["Credit Sponsor's<br/>REFERRAL WALLET"]
+    D --> H
+    E --> H
+    F --> H
+    G --> H
 ```
-
-### Achiever Travel Club Milestones
-Tracks cumulative 4-month direct business volume:
-1. **Goa Trip (3D/2N)**: ₹5,00,000 direct business volume
-2. **Andaman Trip (4D/3N)**: ₹15,00,000 direct business volume
-3. **Thailand Trip (5D/4N)**: ₹30,00,000 direct business volume
-4. **Dubai Grand Tour (5D/4N)**: ₹50,00,000 direct business volume
-5. **Europe Luxury Tour (7D/6N)**: ₹1,00,00,000 direct business volume
 
 ---
 
-## 5. Mandatory 2FA Withdrawal Pipeline
+### Phase 6: Achiever Travel Milestones & Rank Rewards
 
-To ensure absolute capital protection:
-- **Source Separation**: Withdrawals are strictly permitted only from **ROI Wallet** or **Referral Wallet**. Staked principal in `MAIN` wallet is locked during contract maturity.
-- **Minimum Payout**: ₹500 ($5 USDT).
-- **Atomic Balance Reservation**: The requested payout amount is immediately quarantined (`reservedWithdrawal += amount`), blocking concurrent double-spending attempts.
-- **Mandatory TOTP 2FA**: The backend rejects any withdrawal request without a verified 6-digit TOTP code generated by Google Authenticator.
+- **Service**: [`rewardService.js`](file:///c:/Users/ISHA%20THANKI1/Desktop/unicorn/backend/services/rewardService.js)
+- **Job**: [`achieverJob.js`](file:///c:/Users/ISHA%20THANKI1/Desktop/unicorn/backend/jobs/achieverJob.js) & [`rankJob.js`](file:///c:/Users/ISHA%20THANKI1/Desktop/unicorn/backend/jobs/rankJob.js)
+
+#### 1. Achiever Travel Club (Within 4 Months Direct Volume)
+- **Goa Trip (3D/2N)**: ₹5,00,000 Direct Business Volume
+- **Andaman Trip (4D/3N)**: ₹15,00,000 Direct Business Volume
+- **Thailand Trip (5D/4N)**: ₹30,00,000 Direct Business Volume
+- **Dubai Grand Tour (5D/4N)**: ₹50,00,000 Direct Business Volume
+- **Europe Luxury Tour (7D/6N)**: ₹1,00,00,000 Direct Business Volume
+
+#### 2. One-Time Rank Bonus Milestones
+- Target ₹2,50,000 $\rightarrow$ Bonus ₹5,000
+- Target ₹5,00,000 $\rightarrow$ Bonus ₹11,000
+- Target ₹10,00,000 $\rightarrow$ Bonus ₹20,000
+- Target ₹25,00,000 $\rightarrow$ Bonus ₹45,000
+- Target ₹50,00,000 $\rightarrow$ Bonus ₹1,00,000
+- Target ₹1,00,00,000 $\rightarrow$ Bonus ₹3,00,000
+
+---
+
+### Phase 7: Payout & Withdrawal Pipeline with Mandatory 2FA
+
+- **Route**: `POST /api/withdrawals`
+- **Controller**: [`withdrawalController.js`](file:///c:/Users/ISHA%20THANKI1/Desktop/unicorn/backend/controllers/withdrawalController.js)
 
 ```mermaid
 stateDiagram-v2
-    [*] --> BalanceCheck
-    BalanceCheck --> Available: Balance >= Min Payout (₹500)
-    BalanceCheck --> Rejected: Insufficient Available Balance
-    Available --> Enter2FA: User inputs 2FA TOTP code
-    Enter2FA --> TOTPVerified: otplib verifies 6-digit code
-    Enter2FA --> TOTPFailed: Code invalid or expired
-    TOTPFailed --> Enter2FA
-    TOTPVerified --> BalanceReserved: balance -= amount, reserved += amount
-    BalanceReserved --> PendingReview: Stored in Atlas 'withdrawals'
-    PendingReview --> Completed: Admin / Auto-Settler dispatches funds
-    Completed --> [*]
+    [*] --> RequestSubmitted: User requests withdrawal from ROI or Referral Wallet
+    RequestSubmitted --> Validate2FA: User inputs 6-digit TOTP code
+    Validate2FA --> Rejected_Invalid2FA: Invalid / expired OTP
+    Rejected_Invalid2FA --> [*]
+    
+    Validate2FA --> CheckAvailableBalance: TOTP Verified Successfully
+    CheckAvailableBalance --> Rejected_Insufficient: Available < Requested Amount
+    Rejected_Insufficient --> [*]
+    
+    CheckAvailableBalance --> BalanceQuarantined: Available >= Requested
+    note right of BalanceQuarantined
+        Double-Entry Protection:
+        reservedWithdrawal += Amount
+        Available balance decreases immediately
+    end note
+    
+    BalanceQuarantined --> AdminQueue: Appears in Pending Payout Queue
+    AdminQueue --> AdminRejected: Admin Rejects (with notes)
+    AdminRejected --> BalanceRefunded: reservedWithdrawal -= Amount (Funds Returned)
+    BalanceRefunded --> [*]
+    
+    AdminQueue --> AdminApproved: Admin Approves / Executes Payout
+    AdminApproved --> LedgerFinalized: balance -= Amount, reservedWithdrawal -= Amount
+    LedgerFinalized --> PayoutCompleted: Fiat UPI Dispatched or On-Chain Transfer
+    PayoutCompleted --> [*]
 ```
+
+1. **Source Restriction**: Payouts are strictly allowed only from **ROI Wallet** or **Referral Wallet**. Main deposit capital is locked during active contract duration.
+2. **2FA TOTP Requirement**: Uses `otplib.verifySync` to cryptographically verify the user's Google Authenticator 6-digit code.
+3. **Double-Spending Prevention**: The requested amount is immediately quarantined into `reservedWithdrawal`.
+4. **Admin Approval & Settlement**: Administrator verifies bank transfer or initiates on-chain BEP-20 transaction before finalizing ledger debit.
 
 ---
 
-## 6. Web3 MetaMask Connection Flow
+### Phase 8: Administrative Governance & Audit Trail
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as User
-    participant App as React DApp
-    participant MM as MetaMask Wallet
-    participant API as Backend Auth Controller
-    participant DB as MongoDB Atlas
-
-    User->>App: Clicks 'Connect Wallet'
-    alt Mobile Browser
-        App->>MM: Redirect via metamask.app.link/dapp/
-    else Desktop Browser
-        App->>MM: eth_requestAccounts
-        MM-->>App: Returns Account Address (0x...)
-        App->>MM: wallet_switchEthereumChain (BSC 0x38)
-        App->>API: POST /api/users/wallet-address (address, web3Connected: true)
-        API->>DB: Atomic update user.walletAddress
-        API-->>App: Confirmed & Linked to Profile
-    end
-```
+- **Routes**: `/api/admin/*`
+- **Controller**: [`adminController.js`](file:///c:/Users/ISHA%20THANKI1/Desktop/unicorn/backend/controllers/adminController.js)
+- **Features**:
+  - **Deposit Approval Queue**: Displays pending INR UTR references and auto-verified BSC USDT transactions.
+  - **Manual 0.45% ROI Trigger**: Allows authorized administrator to trigger or test the daily yield cycle on demand.
+  - **Protocol Parameters Management**: Real-time update of minimum withdrawal limits, daily ROI rate, and public holidays.
+  - **Immutable Audit Logging**: Every administrative action (approval, rejection, configuration update) writes a permanent entry to the `auditlogs` collection with `performedBy`, `action`, `entityId`, and `details`.
 
 ---
 
-## 7. MongoDB Atlas Persistence Model
+## 4. Verification Commands
 
-The live Atlas cluster operates with the following collections:
+Run these commands in your project root to verify all backend systems:
 
-```mermaid
-erDiagram
-    USERS ||--o{ WALLETS : owns
-    USERS ||--o{ INVESTMENTS : stakes
-    USERS ||--o{ DEPOSITS : submits
-    USERS ||--o{ WITHDRAWALS : requests
-    USERS ||--o{ FINANCIALLEDGERS : tracks
+```bash
+# 1. Run live end-to-end 8-stage backend verification script
+node backend/scripts/demo_full_flow.js
 
-    USERS {
-        ObjectId _id PK
-        string email UK
-        string referralCode UK
-        string walletAddress UK "sparse"
-        string role "user | admin"
-        string kycStatus "VERIFIED | UNVERIFIED"
-    }
+# 2. Run the 17 Final ROI & Payment Scenarios test suite
+npm run test:scenarios
 
-    WALLETS {
-        ObjectId _id PK
-        ObjectId userId FK
-        string type "MAIN | ROI | REFERRAL"
-        number balance
-        number reservedWithdrawal
-    }
-
-    DEPOSITS {
-        ObjectId _id PK
-        ObjectId userId FK
-        number amount
-        string currency "INR | USDT"
-        string paymentMethod "UPI | USDT (BEP-20)"
-        string transactionReference
-        string status "PENDING | APPROVED | REJECTED"
-    }
-
-    INVESTMENTS {
-        ObjectId _id PK
-        ObjectId userId FK
-        string packageName
-        number amount
-        number dailyRoiRate "0.0045"
-        number dailyRoiAmount
-        string status "ACTIVE | COMPLETED"
-    }
-
-    WITHDRAWALS {
-        ObjectId _id PK
-        ObjectId userId FK
-        number amount
-        string walletSource "roi | referral"
-        string payoutMethod "upi | crypto"
-        string destinationAddress
-        string status "PENDING | APPROVED"
-    }
+# 3. Run all 120 combined enterprise backend tests
+npm test
 ```
-
+```
+All tests pass with 100% success (120 passed, 0 failed).
+```
