@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Icon, ICONS } from '../components/Icons';
 
 export function InvestPage() {
   const { packages, user, investInPackage, navigateTo } = useApp();
-  const [selectedPkgId, setSelectedPkgId] = useState(packages[3]?.id || 'gold');
+  // Default selected to Starter Package (packages[0]) matching the reference design
+  const [selectedPkgId, setSelectedPkgId] = useState(packages[0]?.id || 'starter');
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
 
   const sel = packages.find(p => p.id === selectedPkgId) || packages[0] || {};
@@ -12,7 +12,6 @@ export function InvestPage() {
   const canAfford = (user?.mainWalletBalance || 0) >= amount;
   const dailyRoi = Number(sel.dailyRoi ?? sel.dailyReturn ?? Math.round(amount * 0.0045));
   const monthlyRoi = Number(sel.monthlyRoi ?? sel.monthlyReturn ?? Math.round(amount * 0.0045 * 22));
-  const bonusUnc = Number(sel.bonusUnc ?? (sel.usdValue ? sel.usdValue * 10 : Math.round(amount / 100)));
 
   const handleInvest = () => {
     investInPackage(sel.id || 'starter');
@@ -20,44 +19,50 @@ export function InvestPage() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Title & Subtitle matching Unicorn_Mobile_App.html Screen 15 */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Title & Subtitle matching reference design */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <h1 className="num" style={{ margin: 0, fontSize: '32px', fontWeight: 600 }}>Invest</h1>
-        <p style={{ margin: 0, fontSize: '15px', color: 'var(--muted)' }}>
+        <h1 className="num" style={{ margin: 0, fontSize: '32px', fontWeight: 700, color: '#ffffff' }}>
+          Invest
+        </h1>
+        <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>
           Every package earns 0.45% daily ROI, paid Monday to Friday across 22 working days a month.
         </p>
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'flex-start' }}>
-        {/* Left Column: 7 Packages as .wal buttons */}
-        <div style={{ flex: '1 1 360px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {/* Left Column: 7 Packages as sleek horizontal rows */}
+        <div style={{ flex: '1 1 380px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {packages.map((pkg) => {
             const isSelected = pkg.id === selectedPkgId;
             return (
               <button
                 key={pkg.id}
                 onClick={() => setSelectedPkgId(pkg.id)}
-                className={`wal ${isSelected ? 'on' : ''}`}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '16px 20px',
-                  borderRadius: '16px',
-                  cursor: 'pointer'
+                  padding: '16px 22px',
+                  borderRadius: '14px',
+                  background: isSelected ? 'var(--grad)' : 'rgba(255, 255, 255, 0.03)',
+                  border: isSelected ? '1px solid transparent' : '1px solid rgba(255, 255, 255, 0.08)',
+                  cursor: 'pointer',
+                  color: '#ffffff',
+                  width: '100%',
+                  transition: 'all 0.15s ease',
+                  boxShadow: isSelected ? '0 6px 18px rgba(181, 92, 169, 0.35)' : 'none'
                 }}
               >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
-                  <span style={{ fontSize: '15px', fontWeight: 600 }}>{pkg.name}</span>
-                  <span style={{ fontSize: '12px', opacity: 0.85 }}>Tier {pkg.tier || 1} · USD Ref: ${(pkg.usdValue || Math.round((pkg.amount || 10000) / 100)).toLocaleString()}</span>
-                </div>
+                <span style={{ fontSize: '15px', fontWeight: 600, color: '#ffffff' }}>
+                  {pkg.name}
+                </span>
                 <span
                   className="num"
                   style={{
-                    color: isSelected ? '#fff' : 'var(--accent-text)',
+                    color: '#ffffff',
                     fontWeight: 600,
-                    fontSize: '18px'
+                    fontSize: '16px'
                   }}
                 >
                   ₹{(pkg.amount || 0).toLocaleString('en-IN')}
@@ -67,72 +72,95 @@ export function InvestPage() {
           })}
         </div>
 
-        {/* Right Column: Detailed Selected Package Card */}
-        <section className="card" style={{ flex: '1 1 420px', minWidth: 0, padding: 'clamp(20px, 4vw, 32px)', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* Right Column: Detailed Selected Package Card matching Image 1 */}
+        <section
+          className="card"
+          style={{
+            flex: '1 1 420px',
+            minWidth: 0,
+            padding: '32px 28px',
+            borderRadius: '20px',
+            background: '#11131c',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '24px'
+          }}
+        >
+          {/* Header: Package Name & Big Amount */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: '15px', color: 'var(--muted)' }}>{sel.name || 'Investment Package'}</span>
-            <span className="num" style={{ fontSize: 'clamp(40px, 5vw, 56px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.05 }}>
-              ₹{amount.toLocaleString('en-IN')}
+            <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
+              {sel.name || 'Starter Package'}
             </span>
+            <div
+              className="num"
+              style={{
+                fontSize: 'clamp(44px, 5vw, 56px)',
+                fontWeight: 700,
+                letterSpacing: '-0.02em',
+                lineHeight: 1.05,
+                color: '#ffffff'
+              }}
+            >
+              ₹{amount.toLocaleString('en-IN')}
+            </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderTop: '1px solid var(--divider)', fontSize: '16px' }}>
+          {/* 3 Detail Rows matching reference design */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Row 1: Daily ROI (0.45%) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
               <span style={{ color: 'var(--muted)' }}>Daily ROI (0.45%)</span>
-              <span className="num" style={{ fontWeight: 600, color: 'var(--pos)' }}>
-                +₹{dailyRoi.toLocaleString('en-IN')} / day
+              <span className="num" style={{ fontWeight: 600, color: 'var(--pos)', fontSize: '15px' }}>
+                ₹{dailyRoi.toLocaleString('en-IN')}
               </span>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderTop: '1px solid var(--divider)', fontSize: '16px' }}>
+            {/* Row 2: Per month (22 days, 9.9%) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
               <span style={{ color: 'var(--muted)' }}>Per month (22 days, 9.9%)</span>
-              <span className="num" style={{ fontWeight: 600, color: 'var(--pos)' }}>
+              <span className="num" style={{ fontWeight: 600, color: 'var(--pos)', fontSize: '15px' }}>
                 ₹{monthlyRoi.toLocaleString('en-IN')}
               </span>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderTop: '1px solid var(--divider)', fontSize: '16px' }}>
-              <span style={{ color: 'var(--muted)' }}>Payout schedule</span>
-              <span style={{ fontWeight: 600 }}>Mon – Fri (00:00 UTC)</span>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderTop: '1px solid var(--divider)', fontSize: '16px' }}>
-              <span style={{ color: 'var(--muted)' }}>Bonus UNC Tokens</span>
-              <span className="num" style={{ fontWeight: 600, color: 'var(--accent-text)' }}>
-                +{bonusUnc.toLocaleString('en-IN')} UNC (BEP-20)
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderTop: '1px solid var(--divider)', fontSize: '16px' }}>
-              <span style={{ color: 'var(--muted)' }}>Your Available Balance</span>
-              <span className="num" style={{ fontWeight: 600, color: canAfford ? 'var(--pos)' : '#ef5350' }}>
-                ₹{(user?.mainWalletBalance || 0).toLocaleString('en-IN')}
+            {/* Row 3: Payout days */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
+              <span style={{ color: 'var(--muted)' }}>Payout days</span>
+              <span style={{ fontWeight: 600, color: '#ffffff', fontSize: '14px' }}>
+                Mon – Fri
               </span>
             </div>
           </div>
 
-          {canAfford ? (
+          {/* Outline Button: Invest ₹Amount */}
+          <div style={{ marginTop: '8px' }}>
             <button
-              onClick={() => setConfirmModalOpen(true)}
-              className="btnp btnw"
-              style={{ width: '100%', height: '52px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}
+              onClick={() => {
+                if (canAfford) {
+                  setConfirmModalOpen(true);
+                } else {
+                  navigateTo('deposit');
+                }
+              }}
+              className="btnp"
+              style={{
+                width: '100%',
+                height: '48px',
+                fontSize: '15px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+                background: 'transparent'
+              }}
             >
-              <span className="gt">Invest ₹{amount.toLocaleString('en-IN')}</span>
+              Invest ₹{amount.toLocaleString('en-IN')}
             </button>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button
-                onClick={() => navigateTo('deposit')}
-                className="btnp btnw"
-                style={{ width: '100%', height: '52px', fontSize: '16px', fontWeight: 600, cursor: 'pointer' }}
-              >
-                <span className="gt">+ Deposit Funds (Need ₹{Math.max(0, amount - (user?.mainWalletBalance || 0)).toLocaleString('en-IN')})</span>
-              </button>
-              <span style={{ fontSize: '12px', color: 'var(--muted)', textAlign: 'center' }}>
-                Insufficient main wallet balance. Add funds via UPI or BEP-20 USDT.
-              </span>
-            </div>
-          )}
+          </div>
         </section>
       </div>
 
@@ -177,11 +205,11 @@ export function InvestPage() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--muted)' }}>Daily Return (0.45%):</span>
-                <strong className="num" style={{ color: 'var(--pos)' }}>+₹{dailyRoi.toLocaleString('en-IN')}/day</strong>
+                <strong className="num" style={{ color: 'var(--pos)' }}>₹{dailyRoi.toLocaleString('en-IN')} / day</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--muted)' }}>Bonus Tokens:</span>
-                <strong className="num">{bonusUnc.toLocaleString('en-IN')} UNC</strong>
+                <span style={{ color: 'var(--muted)' }}>Monthly Return (22 days):</span>
+                <strong className="num" style={{ color: 'var(--pos)' }}>₹{monthlyRoi.toLocaleString('en-IN')}</strong>
               </div>
             </div>
 
@@ -189,16 +217,16 @@ export function InvestPage() {
               <button
                 onClick={() => setConfirmModalOpen(false)}
                 className="btns"
-                style={{ flex: 1, height: '48px' }}
+                style={{ flex: 1, height: '48px', borderRadius: '12px', cursor: 'pointer' }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleInvest}
                 className="btnp btnw"
-                style={{ flex: 1, height: '48px' }}
+                style={{ flex: 1, height: '48px', borderRadius: '12px', cursor: 'pointer' }}
               >
-                <span className="gt">Confirm & Start Earning</span>
+                <span className="gt">Confirm &amp; Start</span>
               </button>
             </div>
           </div>
