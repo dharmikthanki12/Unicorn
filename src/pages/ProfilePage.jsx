@@ -18,7 +18,6 @@ export function ProfilePage() {
     showToast,
     openLoginModal,
     logout,
-    updateBankDetails,
     submitKyc
   } = useApp();
 
@@ -28,13 +27,6 @@ export function ProfilePage() {
   // KYC Submission form state
   const [kycDocType, setKycDocType] = useState('Aadhaar Card');
   const [kycDocId, setKycDocId] = useState('');
-
-  // Bank form state
-  const [isEditingBank, setIsEditingBank] = useState(false);
-  const [bankNameInput, setBankNameInput] = useState('');
-  const [accountNumInput, setAccountNumInput] = useState('');
-  const [ifscInput, setIfscInput] = useState('');
-  const [upiInput, setUpiInput] = useState('');
 
   if (!user) {
     return (
@@ -54,24 +46,6 @@ export function ProfilePage() {
       </div>
     );
   }
-
-  const bankDetails = user.bankDetails;
-
-  const handleSaveBank = (e) => {
-    e.preventDefault();
-    if (!bankNameInput || !accountNumInput) {
-      showToast('Please enter both Bank Name and Account Number.', 'error');
-      return;
-    }
-    updateBankDetails({
-      accountHolder: user.name,
-      bankName: bankNameInput,
-      accountNumber: accountNumInput,
-      ifsc: ifscInput || 'IFSC0001234',
-      upiId: upiInput || `${user.name.toLowerCase().replace(/[^a-z0-9]/g, '')}@okbank`
-    });
-    setIsEditingBank(false);
-  };
 
   const handleKycSubmit = (e) => {
     e.preventDefault();
@@ -208,20 +182,6 @@ export function ProfilePage() {
             <path d="M3 20l18-8L3 4v6l11 2-11 2z" />
           </svg>
           <span style={{ flex: 1 }}>Achiever travel passes</span>
-          <svg className="ic" viewBox="0 0 24 24" style={{ color: 'var(--muted)', width: '18px', height: '18px' }}>
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </button>
-
-        {/* Bank & Web3 Payout Accounts */}
-        <button
-          className="item"
-          onClick={() => setActiveModal('bank')}
-        >
-          <svg className="ic" viewBox="0 0 24 24" style={{ color: 'var(--accent-text)' }}>
-            <path d="M3 10h18M5 10v8m4-8v8m6-8v8m4-8v8M2 19h20M12 3l10 5H2l10-5z" />
-          </svg>
-          <span style={{ flex: 1 }}>Bank &amp; Web3 Accounts</span>
           <svg className="ic" viewBox="0 0 24 24" style={{ color: 'var(--muted)', width: '18px', height: '18px' }}>
             <path d="M9 6l6 6-6 6" />
           </svg>
@@ -530,144 +490,6 @@ export function ProfilePage() {
               onClick={() => setActiveModal(null)}
               className="btnp btnw"
               style={{ width: '100%', height: '46px', fontSize: '14px' }}
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Bank & Web3 Modal */}
-      {activeModal === 'bank' && (
-        <div onClick={() => setActiveModal(null)} style={modalBackdropStyle}>
-          <div onClick={e => e.stopPropagation()} className="card" style={modalContentStyle}>
-            <div style={modalHeaderStyle}>
-              <h3 style={{ margin: 0, fontSize: '18px' }}>Bank &amp; Web3 Accounts</h3>
-              <button onClick={() => setActiveModal(null)} style={{ fontSize: '20px', color: 'var(--muted)' }}>✕</button>
-            </div>
-
-            {/* Primary Bank Section */}
-            <div style={{ background: 'var(--surface2)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  PRIMARY BANK ACCOUNT (INR)
-                </span>
-                {bankDetails && (
-                  <button
-                    onClick={() => {
-                      setBankNameInput(bankDetails.bankName || '');
-                      setAccountNumInput(bankDetails.accountNumber || '');
-                      setIfscInput(bankDetails.ifsc || '');
-                      setUpiInput(bankDetails.upiId || '');
-                      setIsEditingBank(!isEditingBank);
-                    }}
-                    style={{ fontSize: '12px', color: 'var(--accent-text)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
-                    {isEditingBank ? 'Cancel' : 'Edit Details'}
-                  </button>
-                )}
-              </div>
-
-              {bankDetails && !isEditingBank ? (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--muted)' }}>Bank Name:</span>
-                    <strong>{bankDetails.bankName}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--muted)' }}>A/C Number:</span>
-                    <strong className="num">{bankDetails.accountNumber}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--muted)' }}>IFSC:</span>
-                    <strong className="num">{bankDetails.ifsc}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--muted)' }}>UPI ID:</span>
-                    <strong className="num" style={{ color: 'var(--accent-text)' }}>{bankDetails.upiId}</strong>
-                  </div>
-                </>
-              ) : (
-                <form onSubmit={handleSaveBank} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {!bankDetails && (
-                    <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
-                      No bank account linked yet. Enter your banking details for direct fiat payouts.
-                    </div>
-                  )}
-                  <input
-                    type="text"
-                    placeholder="Bank Name (e.g. State Bank of India, HDFC)"
-                    value={bankNameInput}
-                    onChange={e => setBankNameInput(e.target.value)}
-                    style={{ height: '38px', borderRadius: '8px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', padding: '0 12px', fontSize: '13px' }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Account Number"
-                    value={accountNumInput}
-                    onChange={e => setAccountNumInput(e.target.value)}
-                    style={{ height: '38px', borderRadius: '8px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', padding: '0 12px', fontSize: '13px' }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="IFSC Code (e.g. SBIN0001244)"
-                    value={ifscInput}
-                    onChange={e => setIfscInput(e.target.value)}
-                    style={{ height: '38px', borderRadius: '8px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', padding: '0 12px', fontSize: '13px' }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="UPI ID (e.g. name@okhdfcbank)"
-                    value={upiInput}
-                    onChange={e => setUpiInput(e.target.value)}
-                    style={{ height: '38px', borderRadius: '8px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', padding: '0 12px', fontSize: '13px' }}
-                  />
-                  <button
-                    type="submit"
-                    className="btnp btnw"
-                    style={{ height: '40px', fontSize: '13px', fontWeight: 600, marginTop: '4px' }}
-                  >
-                    Save Primary Bank
-                  </button>
-                </form>
-              )}
-            </div>
-
-            {/* Web3 Wallet Section */}
-            {(() => {
-              const isWeb3Conn = Boolean(user?.web3Connected || web3Connected);
-              const currentWeb3Addr = user?.web3Address || web3Address || '';
-              return (
-                <div style={{ background: 'var(--surface2)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    WEB3 WALLET (BNB SMART CHAIN BEP-20)
-                  </span>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="num" style={{ fontSize: '13px', color: isWeb3Conn ? 'var(--pos)' : 'var(--muted)' }}>
-                      {isWeb3Conn && currentWeb3Addr ? `${currentWeb3Addr.slice(0, 8)}...${currentWeb3Addr.slice(-6)}` : 'Not Connected'}
-                    </span>
-                    <button
-                      onClick={isWeb3Conn ? disconnectWeb3Wallet : connectWeb3Wallet}
-                      style={{
-                        fontSize: '12px',
-                        color: isWeb3Conn ? '#ef4444' : 'var(--accent-text)',
-                        fontWeight: 600,
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {isWeb3Conn ? 'Disconnect' : 'Connect Wallet'}
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
-
-            <button
-              onClick={() => setActiveModal(null)}
-              className="btno"
-              style={{ width: '100%', height: '44px', fontSize: '14px' }}
             >
               Done
             </button>
