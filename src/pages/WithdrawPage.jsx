@@ -13,9 +13,9 @@ export function WithdrawPage() {
 
   if (!user) {
     return (
-      <div style={{ maxWidth: '480px', margin: '40px auto', width: '100%', textAlign: 'center', padding: '36px 24px', background: '#11131c', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+      <div style={{ maxWidth: '480px', margin: '40px auto', width: '100%', textAlign: 'center', padding: '36px 24px', background: 'var(--surface)', borderRadius: '24px', border: '1px solid var(--border)' }}>
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔐</div>
-        <h2 style={{ margin: '0 0 8px 0', fontSize: '22px', color: '#ffffff' }}>Authentication Required</h2>
+        <h2 style={{ margin: '0 0 8px 0', fontSize: '22px', color: 'var(--text)' }}>Authentication Required</h2>
         <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: 1.6, marginBottom: '24px' }}>
           Please log in to your UNICORN account to initiate payouts from your ROI Wallet or Referral Wallet with 2FA protection.
         </p>
@@ -97,18 +97,18 @@ export function WithdrawPage() {
       <form
         onSubmit={handleSubmit}
         style={{
-          background: '#11131c',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
           borderRadius: '24px',
           padding: '32px',
           display: 'flex',
           flexDirection: 'column',
           gap: '20px',
-          boxShadow: '0 12px 36px rgba(0, 0, 0, 0.45)'
+          boxShadow: 'var(--shadow)'
         }}
       >
         {/* Title */}
-        <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 700, color: '#ffffff' }}>
+        <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 700, color: 'var(--text)' }}>
           Withdraw
         </h1>
 
@@ -125,11 +125,11 @@ export function WithdrawPage() {
               style={{
                 borderRadius: '16px',
                 padding: '16px 18px',
-                background: wallet === 'roi' ? 'var(--grad)' : 'rgba(255, 255, 255, 0.03)',
-                border: wallet === 'roi' ? '1px solid transparent' : '1px solid rgba(255, 255, 255, 0.08)',
+                background: wallet === 'roi' ? 'var(--grad)' : 'var(--surface2)',
+                border: wallet === 'roi' ? '1px solid transparent' : '1px solid var(--border)',
                 cursor: 'pointer',
                 textAlign: 'left',
-                color: '#ffffff',
+                color: wallet === 'roi' ? '#ffffff' : 'var(--text)',
                 transition: 'all 0.15s ease',
                 boxShadow: wallet === 'roi' ? '0 6px 18px rgba(181, 92, 169, 0.35)' : 'none'
               }}
@@ -149,11 +149,11 @@ export function WithdrawPage() {
               style={{
                 borderRadius: '16px',
                 padding: '16px 18px',
-                background: wallet === 'referral' ? 'var(--grad)' : 'rgba(255, 255, 255, 0.03)',
-                border: wallet === 'referral' ? '1px solid transparent' : '1px solid rgba(255, 255, 255, 0.08)',
+                background: wallet === 'referral' ? 'var(--grad)' : 'var(--surface2)',
+                border: wallet === 'referral' ? '1px solid transparent' : '1px solid var(--border)',
                 cursor: 'pointer',
                 textAlign: 'left',
-                color: '#ffffff',
+                color: wallet === 'referral' ? '#ffffff' : 'var(--text)',
                 transition: 'all 0.15s ease',
                 boxShadow: wallet === 'referral' ? '0 6px 18px rgba(181, 92, 169, 0.35)' : 'none'
               }}
@@ -178,8 +178,8 @@ export function WithdrawPage() {
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               padding: '4px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'var(--surface2)',
+              border: '1px solid var(--border)',
               borderRadius: '14px',
               gap: '4px'
             }}
@@ -234,9 +234,9 @@ export function WithdrawPage() {
             style={{
               height: '48px',
               borderRadius: '12px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              color: '#ffffff',
+              background: 'var(--surface2)',
+              border: '1px solid var(--border)',
+              color: 'var(--text)',
               fontSize: '16px',
               fontWeight: 600,
               padding: '0 16px',
@@ -261,9 +261,9 @@ export function WithdrawPage() {
             style={{
               height: '48px',
               borderRadius: '12px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              color: '#ffffff',
+              background: 'var(--surface2)',
+              border: '1px solid var(--border)',
+              color: 'var(--text)',
               fontSize: '14px',
               padding: '0 16px',
               outline: 'none',
@@ -287,9 +287,9 @@ export function WithdrawPage() {
             style={{
               height: '48px',
               borderRadius: '12px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              color: '#ffffff',
+              background: 'var(--surface2)',
+              border: '1px solid var(--border)',
+              color: 'var(--text)',
               fontSize: '14px',
               padding: '0 16px',
               outline: 'none',
@@ -315,7 +315,7 @@ export function WithdrawPage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#ffffff',
+              color: 'var(--text)',
               background: 'transparent'
             }}
           >

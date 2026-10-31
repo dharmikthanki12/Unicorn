@@ -22,7 +22,7 @@ export function InvestPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Title & Subtitle matching reference design */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <h1 className="num" style={{ margin: 0, fontSize: '32px', fontWeight: 700, color: '#ffffff' }}>
+        <h1 className="num" style={{ margin: 0, fontSize: '32px', fontWeight: 700, color: 'var(--text)' }}>
           Invest
         </h1>
         <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>
@@ -45,22 +45,22 @@ export function InvestPage() {
                   justifyContent: 'space-between',
                   padding: '16px 22px',
                   borderRadius: '14px',
-                  background: isSelected ? 'var(--grad)' : 'rgba(255, 255, 255, 0.03)',
-                  border: isSelected ? '1px solid transparent' : '1px solid rgba(255, 255, 255, 0.08)',
+                  background: isSelected ? 'var(--grad)' : 'var(--surface2)',
+                  border: isSelected ? '1px solid transparent' : '1px solid var(--border)',
                   cursor: 'pointer',
-                  color: '#ffffff',
+                  color: isSelected ? '#ffffff' : 'var(--text)',
                   width: '100%',
                   transition: 'all 0.15s ease',
                   boxShadow: isSelected ? '0 6px 18px rgba(181, 92, 169, 0.35)' : 'none'
                 }}
               >
-                <span style={{ fontSize: '15px', fontWeight: 600, color: '#ffffff' }}>
+                <span style={{ fontSize: '15px', fontWeight: 600, color: isSelected ? '#ffffff' : 'var(--text)' }}>
                   {pkg.name}
                 </span>
                 <span
                   className="num"
                   style={{
-                    color: '#ffffff',
+                    color: isSelected ? '#ffffff' : 'var(--text)',
                     fontWeight: 600,
                     fontSize: '16px'
                   }}
@@ -80,8 +80,8 @@ export function InvestPage() {
             minWidth: 0,
             padding: '32px 28px',
             borderRadius: '20px',
-            background: '#11131c',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
             display: 'flex',
             flexDirection: 'column',
             gap: '24px'
@@ -99,7 +99,7 @@ export function InvestPage() {
                 fontWeight: 700,
                 letterSpacing: '-0.02em',
                 lineHeight: 1.05,
-                color: '#ffffff'
+                color: 'var(--text)'
               }}
             >
               ₹{amount.toLocaleString('en-IN')}
@@ -127,7 +127,7 @@ export function InvestPage() {
             {/* Row 3: Payout days */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
               <span style={{ color: 'var(--muted)' }}>Payout days</span>
-              <span style={{ fontWeight: 600, color: '#ffffff', fontSize: '14px' }}>
+              <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '14px' }}>
                 Mon – Fri
               </span>
             </div>
@@ -154,7 +154,7 @@ export function InvestPage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#ffffff',
+                color: 'var(--text)',
                 background: 'transparent'
               }}
             >

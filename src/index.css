@@ -46,7 +46,7 @@
   --muted: #5E5B70;
   --placeholder: #77738A;
   --accent-text: #17131F;
-  --pos: #17131F;
+  --pos: #059669;
   --avatar-bg: #F0E3F7;
   --avatar-text: #17131F;
   --bar-bg: rgba(255, 255, 255, 0.92);
@@ -171,6 +171,14 @@ input, textarea, select {
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
+}
+
+.desktop-table-wrapper {
+  display: block;
+}
+
+.mobile-tx-cards-wrapper {
+  display: none;
 }
 
 /* Action buttons */

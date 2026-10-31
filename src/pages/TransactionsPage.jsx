@@ -11,11 +11,11 @@ export function TransactionsPage() {
     { id: 'all', label: 'All' },
     { id: 'deposit', label: 'Deposits' },
     { id: 'roi', label: 'ROI' },
-    { id: 'referral', label: 'Referral' },
-    { id: 'withdraw', label: 'Withdrawals' }
+    { id: 'referral', label: 'Referral' }
   ];
 
   const filteredTxns = transactions.filter(t => {
+    if (t.type === 'withdraw') return false;
     if (filter === 'all') return true;
     return t.type === filter;
   });
@@ -24,7 +24,7 @@ export function TransactionsPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Title & Filter Chips Bar matching Unicorn_Mobile_App.html Screen 16 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-        <h1 className="num" style={{ margin: 0, fontSize: '32px', fontWeight: 600 }}>Transactions</h1>
+        <h1 className="num" style={{ margin: 0, fontSize: '32px', fontWeight: 600, color: 'var(--text)' }}>Transactions</h1>
         <div role="group" aria-label="Filter by type" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {filterOptions.map((opt) => (
             <button

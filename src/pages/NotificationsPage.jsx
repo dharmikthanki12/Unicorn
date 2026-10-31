@@ -4,7 +4,6 @@ import { Icon, ICONS } from '../components/Icons';
 
 export function NotificationsPage() {
   const { notifications, setUser, showToast } = useApp();
-  const [filter, setFilter] = useState('all');
 
   const getIcon = (type) => {
     switch (type) {
@@ -31,12 +30,6 @@ export function NotificationsPage() {
     }
   };
 
-  const filteredNotifications = notifications.filter(n => {
-    if (filter === 'all') return true;
-    if (filter === 'unread') return n.unread;
-    return n.type === filter;
-  });
-
   const unreadTotal = notifications.filter(n => n.unread).length;
 
   return (
@@ -57,31 +50,10 @@ export function NotificationsPage() {
         )}
       </div>
 
-      {/* Filter Chips */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        {[
-          { id: 'all', label: 'All' },
-          { id: 'unread', label: `Unread (${unreadTotal})` },
-          { id: 'roi', label: 'Daily ROI' },
-          { id: 'referral', label: 'Referrals' },
-          { id: 'deposit', label: 'Deposits' },
-          { id: 'security', label: 'Security' }
-        ].map(item => (
-          <button
-            key={item.id}
-            onClick={() => setFilter(item.id)}
-            className={`chip ${filter === item.id ? 'on' : ''}`}
-            style={{ fontSize: '13px', padding: '6px 14px' }}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
       {/* Notifications Card matching screen_Notifications_desktop.html */}
       <section className="card" style={{ padding: '8px 24px' }}>
-        {filteredNotifications.length > 0 ? (
-          filteredNotifications.map((n, idx) => (
+        {notifications.length > 0 ? (
+          notifications.map((n, idx) => (
             <div
               key={n.id || idx}
               onClick={() => toggleSingleRead(n.id)}

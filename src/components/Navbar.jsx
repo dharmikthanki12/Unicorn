@@ -345,26 +345,28 @@ export function Navbar() {
               background: 'rgba(0,0,0,0.5)',
               backdropFilter: 'blur(4px)',
               WebkitBackdropFilter: 'blur(4px)',
-              zIndex: 998
+              zIndex: 1050,
+              pointerEvents: 'auto'
             }}
           />
           <div
             style={{
-              position: 'absolute',
-              top: '70px',
+              position: 'fixed',
+              top: '72px',
               left: '16px',
               right: '16px',
               maxWidth: '480px',
               margin: '0 auto',
-              background: 'var(--bar-bg)',
-              border: '1px solid var(--border2)',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
               borderRadius: '20px',
               padding: '16px',
               display: 'flex',
               flexDirection: 'column',
               gap: '6px',
               boxShadow: 'var(--shadow)',
-              zIndex: 999
+              zIndex: 1051,
+              pointerEvents: 'auto'
             }}
           >
             {navLinks.map((item) => {
@@ -385,7 +387,9 @@ export function Navbar() {
                     fontSize: '15px',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    border: 'none'
+                    border: 'none',
+                    width: '100%',
+                    pointerEvents: 'auto'
                   }}
                 >
                   <Icon d={item.icon} size={18} />
@@ -414,7 +418,9 @@ export function Navbar() {
                   fontSize: '14px',
                   cursor: 'pointer',
                   border: 'none',
-                  textAlign: 'left'
+                  textAlign: 'left',
+                  width: '100%',
+                  pointerEvents: 'auto'
                 }}
               >
                 Log Out
@@ -432,7 +438,9 @@ export function Navbar() {
                   fontSize: '14px',
                   fontWeight: 600,
                   border: 'none',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  width: '100%',
+                  pointerEvents: 'auto'
                 }}
               >
                 Sign In
