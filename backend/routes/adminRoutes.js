@@ -34,6 +34,8 @@ router.post('/deposits/:id/approve', depositController.approveDeposit);
 router.patch('/deposits/:id/approve', depositController.approveDeposit);
 router.post('/deposits/:id/reject', depositController.rejectDeposit);
 router.patch('/deposits/:id/reject', depositController.rejectDeposit);
+router.post('/deposits/:id/under-review', depositController.underReviewDeposit);
+router.patch('/deposits/:id/under-review', depositController.underReviewDeposit);
 
 // 4. Withdrawals Review
 router.get('/withdrawals', adminController.getAllWithdrawals);

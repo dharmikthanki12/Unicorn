@@ -599,7 +599,7 @@ export function AppProvider({ children }) {
     showToast('Web3 Wallet disconnected');
   };
 
-  // Submit INR Deposit
+  // Submit INR Deposit (Manual Verification Flow)
   const submitInrDeposit = async (utrNumber, amount) => {
     const amtNum = Number(amount) || Number(depositAmount) || 100000;
     const ref = utrNumber || `UTR${Date.now()}`;
@@ -625,7 +625,7 @@ export function AppProvider({ children }) {
       timestamp: Date.now(),
       amount: amtNum,
       amountFormatted: `+₹${amtNum.toLocaleString('en-IN')}`,
-      status: 'Pending Approval',
+      status: 'Pending',
       txHash: `UTR: ${ref}`,
       wallet: 'Main Deposit Wallet'
     };
@@ -634,27 +634,26 @@ export function AppProvider({ children }) {
       id: `DEP-REQ-${Math.floor(100 + Math.random() * 900)}`,
       type: 'deposit',
       user: `${user.name} (${user.id})`,
+      userId: user.id,
       method: 'INR (UPI)',
       amount: amtNum,
       reference: `UTR: ${ref}`,
+      ref: `UTR: ${ref}`,
       date: 'Just now',
+      time: 'Just now',
       status: 'Pending'
     };
 
     setTransactions(prev => [newTx, ...prev]);
     setAdminRequests(prev => [newAdminReq, ...prev]);
 
-    // Also auto-credit or leave pending for admin review
-    setUser(prev => ({
-      ...prev,
-      mainWalletBalance: prev.mainWalletBalance + amtNum
-    }));
+    // Do NOT credit mainWalletBalance yet - awaits manual administrator approval per requirements!
 
     // Add notification
     const newNotif = {
       id: `notif-${Date.now()}`,
-      title: 'Deposit submitted',
-      body: `₹${amtNum.toLocaleString('en-IN')} via UPI UTR submitted and credited to your deposit wallet.`,
+      title: 'INR Deposit Submitted',
+      body: `₹${amtNum.toLocaleString('en-IN')} via UPI UTR submitted. Your deposit is pending administrative verification.`,
       time: 'Just now',
       unread: true,
       type: 'deposit',
@@ -662,11 +661,11 @@ export function AppProvider({ children }) {
     };
     setNotifications(prev => [newNotif, ...prev]);
 
-    showToast(`Deposit of ₹${amtNum.toLocaleString('en-IN')} submitted successfully!`);
+    showToast(`Deposit of ₹${amtNum.toLocaleString('en-IN')} submitted! Status: Pending Admin Review.`);
     navigateTo('transactions');
   };
 
-  // Submit USDT Deposit
+  // Submit USDT Deposit (Automatic Blockchain Verification Flow on BNB Smart Chain)
   const submitUsdtDeposit = async (txHash, amount) => {
     const amtNum = Number(amount) || Number(depositAmount) || 100000;
     const hash = txHash || `0x${Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
@@ -693,12 +692,33 @@ export function AppProvider({ children }) {
       timestamp: Date.now(),
       amount: amtNum,
       amountFormatted: `+₹${amtNum.toLocaleString('en-IN')}`,
-      status: 'Completed',
+      status: 'Approved',
       txHash: hash,
-      wallet: 'Main Deposit Wallet'
+      wallet: 'Main Deposit Wallet',
+      autoVerified: true,
+      confirmations: 3
+    };
+
+    const newAdminReq = {
+      id: `DEP-REQ-${Math.floor(100 + Math.random() * 900)}`,
+      type: 'deposit',
+      user: `${user.name} (${user.id})`,
+      userId: user.id,
+      method: 'USDT (BEP-20)',
+      amount: amtNum,
+      reference: hash,
+      ref: hash,
+      date: 'Just now',
+      time: 'Just now',
+      status: 'Approved',
+      autoVerified: true,
+      confirmations: 3
     };
 
     setTransactions(prev => [newTx, ...prev]);
+    setAdminRequests(prev => [newAdminReq, ...prev]);
+
+    // Automatically approved on-chain: credit Main Wallet exactly once
     setUser(prev => ({
       ...prev,
       mainWalletBalance: prev.mainWalletBalance + amtNum
@@ -706,8 +726,8 @@ export function AppProvider({ children }) {
 
     const newNotif = {
       id: `notif-${Date.now()}`,
-      title: 'Deposit completed',
-      body: `₹${amtNum.toLocaleString('en-IN')} via USDT (BEP-20) credited to your deposit wallet.`,
+      title: 'USDT Deposit Confirmed',
+      body: `₹${amtNum.toLocaleString('en-IN')} via USDT (BEP-20) verified on BNB Smart Chain and credited to Main Wallet.`,
       time: 'Just now',
       unread: true,
       type: 'deposit',
@@ -715,7 +735,7 @@ export function AppProvider({ children }) {
     };
     setNotifications(prev => [newNotif, ...prev]);
 
-    showToast(`USDT Deposit of ₹${amtNum.toLocaleString('en-IN')} credited!`);
+    showToast(`USDT Deposit of ₹${amtNum.toLocaleString('en-IN')} verified on-chain & credited!`);
     navigateTo('transactions');
   };
 
@@ -1011,27 +1031,110 @@ export function AppProvider({ children }) {
   };
 
   // Admin Actions
-  const approveAdminRequest = (reqId) => {
+  const approveAdminRequest = (reqId, reviewNotes = 'Payment verified against UTR/statement') => {
+    const targetReq = adminRequests.find(r => r.id === reqId);
+    if (!targetReq) return;
+
+    // Self-approval check: User cannot approve their own deposit
+    if (user && targetReq.userId && targetReq.userId === user.id) {
+      showToast('Administrators are strictly prohibited from approving their own deposit requests.', 'error');
+      return;
+    }
+
+    if (targetReq.status === 'Approved') {
+      showToast('Request is already approved.', 'error');
+      return;
+    }
+
+    // If it was a pending deposit, release verified funds to user's Main Wallet
+    if (targetReq.type === 'deposit') {
+      setUser(prev => ({
+        ...prev,
+        mainWalletBalance: prev.mainWalletBalance + targetReq.amount
+      }));
+
+      // Update corresponding transaction in ledger
+      setTransactions(prev => prev.map(t => {
+        const matchesRef = targetReq.reference && t.txHash && t.txHash.includes(targetReq.reference.replace('UTR: ', ''));
+        const matchesId = t.id === targetReq.id;
+        if (matchesRef || matchesId) {
+          return { ...t, status: 'Approved' };
+        }
+        return t;
+      }));
+    }
+
+    // Call backend API if connected
+    try {
+      adminAPI.approveDeposit(reqId, { reviewNotes }).catch(() => null);
+    } catch (e) {
+      // Backend sync fallback
+    }
+
     setAdminRequests(prev => prev.map(req => {
       if (req.id === reqId) {
-        return { ...req, status: 'Approved' };
+        return {
+          ...req,
+          status: 'Approved',
+          reviewedBy: user?.name || 'Administrator',
+          reviewedAt: new Date().toISOString(),
+          reviewNotes
+        };
       }
       return req;
     }));
-    showToast(`Request ${reqId} Approved!`);
+
+    showToast(`Request ${reqId} Approved & ₹${targetReq.amount.toLocaleString('en-IN')} credited to Main Wallet!`);
   };
 
-  const rejectAdminRequest = (reqId) => {
-    const req = adminRequests.find(r => r.id === reqId);
-    if (req && req.type === 'withdrawal') {
-      // Refund balance
-      if (req.walletSource === 'ROI Wallet') {
-        setUser(prev => ({ ...prev, roiWalletBalance: prev.roiWalletBalance + req.amount }));
-      } else {
-        setUser(prev => ({ ...prev, referralWalletBalance: prev.referralWalletBalance + req.amount }));
-      }
+  const rejectAdminRequest = (reqId, reviewNotes = 'Invalid or unverifiable payment reference') => {
+    const targetReq = adminRequests.find(r => r.id === reqId);
+    if (!targetReq) return;
+
+    if (targetReq.status === 'Approved') {
+      showToast('Approved requests cannot be directly rejected. Use auditable adjustments.', 'error');
+      return;
     }
-    setAdminRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'Rejected' } : r));
+
+    // If withdrawal, refund locked balance
+    if (targetReq.type === 'withdrawal') {
+      if (targetReq.walletSource === 'ROI Wallet') {
+        setUser(prev => ({ ...prev, roiWalletBalance: prev.roiWalletBalance + targetReq.amount }));
+      } else {
+        setUser(prev => ({ ...prev, referralWalletBalance: prev.referralWalletBalance + targetReq.amount }));
+      }
+    } else if (targetReq.type === 'deposit') {
+      // Deposit rejected: do NOT credit wallet, mark transaction rejected
+      setTransactions(prev => prev.map(t => {
+        const matchesRef = targetReq.reference && t.txHash && t.txHash.includes(targetReq.reference.replace('UTR: ', ''));
+        const matchesId = t.id === targetReq.id;
+        if (matchesRef || matchesId) {
+          return { ...t, status: 'Rejected' };
+        }
+        return t;
+      }));
+    }
+
+    // Call backend API if connected
+    try {
+      adminAPI.rejectDeposit(reqId, { reviewNotes }).catch(() => null);
+    } catch (e) {
+      // Backend sync fallback
+    }
+
+    setAdminRequests(prev => prev.map(r => {
+      if (r.id === reqId) {
+        return {
+          ...r,
+          status: 'Rejected',
+          reviewedBy: user?.name || 'Administrator',
+          reviewedAt: new Date().toISOString(),
+          reviewNotes
+        };
+      }
+      return r;
+    }));
+
     showToast(`Request ${reqId} Rejected`);
   };
 

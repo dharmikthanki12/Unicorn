@@ -59,9 +59,48 @@ const depositSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected', 'PENDING', 'APPROVED', 'REJECTED'],
+    enum: [
+      'pending', 'under_review', 'approved', 'rejected', 'detected', 'confirming', 'failed',
+      'PENDING', 'UNDER_REVIEW', 'APPROVED', 'REJECTED', 'DETECTED', 'CONFIRMING', 'FAILED'
+    ],
     default: 'pending',
     index: true
+  },
+  evidence: {
+    type: String,
+    default: ''
+  },
+  destinationAddress: {
+    type: String,
+    default: ''
+  },
+  tokenContract: {
+    type: String,
+    default: ''
+  },
+  blockNumber: {
+    type: Number,
+    default: null
+  },
+  confirmations: {
+    type: Number,
+    default: 0
+  },
+  requiredConfirmations: {
+    type: Number,
+    default: 1
+  },
+  autoVerified: {
+    type: Boolean,
+    default: false
+  },
+  verificationDetails: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
+  failureReason: {
+    type: String,
+    default: ''
   },
   approvedBy: {
     type: mongoose.Schema.Types.ObjectId,

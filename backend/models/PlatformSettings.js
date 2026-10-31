@@ -48,6 +48,10 @@ const platformSettingsSchema = new mongoose.Schema({
     type: Boolean,
     default: true // Monday to Friday active (22 trading days/month)
   },
+  publicHolidays: {
+    type: [String],
+    default: [] // Array of 'YYYY-MM-DD' dates where ROI calculation pauses
+  },
 
   // 2. Multi-Level Referral Configuration (ROI-on-ROI) (Section 10)
   // Resolves overlapping boundaries: [1], [2-5], [6-10], [11-25], [26+]

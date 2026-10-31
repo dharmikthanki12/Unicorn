@@ -311,22 +311,41 @@ export function AdminPage() {
 
                         {/* Method & Ref */}
                         <td style={{ padding: '18px 20px' }}>
-                          <div style={{ fontSize: '13px', fontWeight: 600 }}>{req.method}</div>
-                          <div className="num" style={{ fontSize: '11px', color: 'var(--accent-text)', wordBreak: 'break-all' }}>
-                            {req.ref}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600 }}>{req.method}</span>
+                            {req.autoVerified && (
+                              <span style={{
+                                fontSize: '10px',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                background: 'rgba(76, 175, 80, 0.15)',
+                                color: 'var(--pos)',
+                                fontWeight: 700
+                              }}>
+                                AUTO BSC
+                              </span>
+                            )}
                           </div>
+                          <div className="num" style={{ fontSize: '11px', color: 'var(--accent-text)', wordBreak: 'break-all' }}>
+                            {req.ref || req.reference}
+                          </div>
+                          {req.reviewNotes && (
+                            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px', fontStyle: 'italic' }}>
+                              Note: {req.reviewNotes}
+                            </div>
+                          )}
                         </td>
 
                         {/* Amount */}
                         <td style={{ padding: '18px 20px', textAlign: 'right' }}>
                           <span className="num" style={{ fontSize: '15px', fontWeight: 700 }}>
-                            {req.amount}
+                            {typeof req.amount === 'number' ? `₹${req.amount.toLocaleString('en-IN')}` : req.amount}
                           </span>
                         </td>
 
                         {/* Time */}
                         <td style={{ padding: '18px 20px', fontSize: '12px', color: 'var(--muted)' }}>
-                          {req.time}
+                          {req.time || req.date}
                         </td>
 
                         {/* Status */}
@@ -347,16 +366,19 @@ export function AdminPage() {
                               ? '#ff9800'
                               : '#f44336'
                           }}>
-                            {req.status}
+                            {req.autoVerified ? 'Auto-Approved (BSC)' : req.status}
                           </span>
                         </td>
 
                         {/* Actions */}
                         <td style={{ padding: '18px 20px', textAlign: 'center' }}>
-                          {isPending ? (
+                          {isPending && !req.autoVerified ? (
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                               <button
-                                onClick={() => approveAdminRequest(req.id)}
+                                onClick={() => {
+                                  const notes = window.prompt ? window.prompt('Admin review notes (optional):', 'Payment verified against bank statement') : 'Approved';
+                                  if (notes !== null) approveAdminRequest(req.id, notes);
+                                }}
                                 style={{
                                   padding: '6px 12px',
                                   borderRadius: '8px',
@@ -371,7 +393,10 @@ export function AdminPage() {
                                 Approve
                               </button>
                               <button
-                                onClick={() => rejectAdminRequest(req.id)}
+                                onClick={() => {
+                                  const reason = window.prompt ? window.prompt('Rejection reason / review notes:', 'Invalid or unverifiable payment reference') : 'Rejected';
+                                  if (reason !== null) rejectAdminRequest(req.id, reason);
+                                }}
                                 style={{
                                   padding: '6px 12px',
                                   borderRadius: '8px',
@@ -387,7 +412,9 @@ export function AdminPage() {
                               </button>
                             </div>
                           ) : (
-                            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Processed</span>
+                            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                              {req.autoVerified ? 'Verified on BSC' : 'Processed'}
+                            </span>
                           )}
                         </td>
                       </tr>
