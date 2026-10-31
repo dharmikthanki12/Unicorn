@@ -7,15 +7,26 @@ export function BottomNav() {
 
   if (activeScreen === 'landing' || !user) return null;
 
-  const tabs = [
-    { id: 'home', label: 'Home', icon: ICONS.home },
-    { id: 'deposit', label: 'Deposit', icon: ICONS.deposit },
-    { id: 'invest', label: 'Invest', icon: ICONS.invest },
-    { id: 'transactions', label: 'Transactions', icon: ICONS.history },
-    { id: 'referral', label: 'Referral', icon: ICONS.referral }
-  ];
+  const isAdmin = Boolean(user && (user.role === 'admin' || user.role === 'ADMIN'));
+
+  const tabs = isAdmin
+    ? [
+        { id: 'admin', label: 'Admin', icon: ICONS.settings },
+        { id: 'home', label: 'User View', icon: ICONS.home },
+        { id: 'deposit', label: 'Deposit', icon: ICONS.deposit },
+        { id: 'invest', label: 'Invest', icon: ICONS.invest },
+        { id: 'transactions', label: 'Txns', icon: ICONS.history }
+      ]
+    : [
+        { id: 'home', label: 'Home', icon: ICONS.home },
+        { id: 'deposit', label: 'Deposit', icon: ICONS.deposit },
+        { id: 'invest', label: 'Invest', icon: ICONS.invest },
+        { id: 'transactions', label: 'Transactions', icon: ICONS.history },
+        { id: 'referral', label: 'Referral', icon: ICONS.referral }
+      ];
 
   const isTabActive = (tabId) => {
+    if (tabId === 'admin') return activeScreen === 'admin';
     if (tabId === 'home') return activeScreen === 'home';
     if (tabId === 'deposit') {
       return ['deposit', 'deposit-amount', 'deposit-method', 'deposit-inr', 'deposit-usdt'].includes(activeScreen);

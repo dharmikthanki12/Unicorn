@@ -50,9 +50,12 @@ export function AppProvider({ children }) {
   };
 
   const getInitialScreen = () => {
-    // If user is logged in, show 'home'; if new or logged out, show 'landing'
+    // If user is logged in, show 'admin' for admins or 'home' for users; if new or logged out, show 'landing'
     const initUser = getInitialUser();
     if (initUser) {
+      if (initUser.role === 'admin' || initUser.role === 'ADMIN') {
+        return initial?.activeScreen && initial.activeScreen !== 'landing' ? initial.activeScreen : 'admin';
+      }
       return initial?.activeScreen && initial.activeScreen !== 'landing' ? initial.activeScreen : 'home';
     }
     return 'landing';
@@ -149,8 +152,9 @@ export function AppProvider({ children }) {
         }
         showToast(`Welcome back, ${loggedUser.name}!`);
         setIsAuthModalOpen(false);
-        setActiveScreen('home');
-        setScreenHistory(['home']);
+        const targetScreen = loggedUser.role === 'admin' ? 'admin' : 'home';
+        setActiveScreen(targetScreen);
+        setScreenHistory([targetScreen]);
         return true;
       }
     } catch (e) {
@@ -161,6 +165,9 @@ export function AppProvider({ children }) {
     if (cleanEmail.includes('admin')) {
       setUser(ADMIN_USER);
       showToast('Logged in as UNICORN Super Admin');
+      setIsAuthModalOpen(false);
+      setActiveScreen('admin');
+      setScreenHistory(['admin']);
     } else {
       const investorUser = {
         ...INITIAL_USER,
@@ -173,10 +180,10 @@ export function AppProvider({ children }) {
       };
       setUser(investorUser);
       showToast(`Logged in successfully as Investor (${investorUser.name})`);
+      setIsAuthModalOpen(false);
+      setActiveScreen('home');
+      setScreenHistory(['home']);
     }
-    setIsAuthModalOpen(false);
-    setActiveScreen('home');
-    setScreenHistory(['home']);
     return true;
   };
 

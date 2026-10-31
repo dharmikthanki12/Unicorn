@@ -28,14 +28,23 @@ export function Navbar() {
   const isWalletConnected = Boolean(user?.web3Connected || web3Connected);
   const currentWalletAddress = user?.web3Address || web3Address || '';
 
-  // EXACT 5 navigation items matching reference design: Home, Deposit, Invest, Transactions, Referral
-  const navLinks = [
-    { id: 'home', label: 'Home', icon: ICONS.home },
-    { id: 'deposit', label: 'Deposit', icon: ICONS.deposit },
-    { id: 'invest', label: 'Invest', icon: ICONS.invest },
-    { id: 'transactions', label: 'Transactions', icon: ICONS.history },
-    { id: 'referral', label: 'Referral', icon: ICONS.referral }
-  ];
+  // Dynamic navigation items: Admin gets Admin Console directly in the pill navbar
+  const navLinks = isAdmin
+    ? [
+        { id: 'admin', label: 'Admin Console', icon: ICONS.settings },
+        { id: 'home', label: 'User Dashboard', icon: ICONS.home },
+        { id: 'deposit', label: 'Deposit', icon: ICONS.deposit },
+        { id: 'invest', label: 'Invest', icon: ICONS.invest },
+        { id: 'transactions', label: 'Transactions', icon: ICONS.history },
+        { id: 'referral', label: 'Referral', icon: ICONS.referral }
+      ]
+    : [
+        { id: 'home', label: 'Home', icon: ICONS.home },
+        { id: 'deposit', label: 'Deposit', icon: ICONS.deposit },
+        { id: 'invest', label: 'Invest', icon: ICONS.invest },
+        { id: 'transactions', label: 'Transactions', icon: ICONS.history },
+        { id: 'referral', label: 'Referral', icon: ICONS.referral }
+      ];
 
   const handleNav = (id) => {
     navigateTo(id);
@@ -124,7 +133,7 @@ export function Navbar() {
 
           {/* Brand: [U] Unicorn */}
           <div
-            onClick={() => handleNav(user ? 'home' : 'landing')}
+            onClick={() => handleNav(user ? (isAdmin ? 'admin' : 'home') : 'landing')}
             className="navbar-brand-pill"
             title="Unicorn Platform"
           >
