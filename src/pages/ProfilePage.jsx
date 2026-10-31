@@ -12,7 +12,6 @@ export function ProfilePage() {
     web3Address,
     connectWeb3Wallet,
     disconnectWeb3Wallet,
-    resetToDefaults,
     achieverBonuses,
     transactions,
     showToast,
@@ -215,18 +214,6 @@ export function ProfilePage() {
           </svg>
         </button>
       </section>
-
-      {/* Reset Demo Data Button */}
-      <button
-        onClick={() => {
-          if (window.confirm('Reset all demo balances, transactions, and settings to default state?')) {
-            resetToDefaults();
-          }
-        }}
-        className="btno"
-      >
-        Reset Demo Data
-      </button>
 
       {/* Log Out Button */}
       <button
