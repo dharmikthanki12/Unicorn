@@ -11,3 +11,4 @@ index.html linguist-documentation
 *.jsx linguist-language=JavaScript
 *.js linguist-language=JavaScript
 *.css linguist-language=CSS
+

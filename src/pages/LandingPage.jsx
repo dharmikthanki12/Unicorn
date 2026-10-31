@@ -161,48 +161,6 @@ export function LandingPage() {
           )}
         </div>
 
-        {/* 1-Click Quick Demo Sign In bar for testing */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          marginTop: '12px',
-          background: 'var(--surface2)',
-          padding: '8px 16px',
-          borderRadius: '14px',
-          border: '1px solid var(--border2)',
-          fontSize: '13px'
-        }}>
-          <span style={{ color: 'var(--muted)', fontWeight: 500 }}>⚡ Try Instant Demo:</span>
-          <button
-            onClick={() => login('rutajeet@unicorn.io', 'UserPassword2026!')}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--accent-text)',
-              fontWeight: 600,
-              cursor: 'pointer',
-              textDecoration: 'underline'
-            }}
-          >
-            👤 Investor View
-          </button>
-          <span style={{ color: 'var(--border2)' }}>|</span>
-          <button
-            onClick={() => login('admin@unicorn.vip', 'AdminPassword2026!')}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#E072D0',
-              fontWeight: 600,
-              cursor: 'pointer',
-              textDecoration: 'underline'
-            }}
-          >
-            🛡️ Admin View
-          </button>
-        </div>
-
         {/* Platform Stat Highlights Bar */}
         <div style={{
           display: 'grid',
