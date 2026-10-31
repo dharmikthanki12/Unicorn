@@ -1,0 +1,13 @@
+# Ignore reference mockup file from GitHub language statistics
+Unicorn_Mobile_App.html/** linguist-documentation
+Unicorn_Mobile_App.html/** linguist-vendored
+Unicorn_Mobile_App.html/* linguist-documentation
+Unicorn_Mobile_App.html/* linguist-vendored
+
+# Exclude entrypoint HTML template
+index.html linguist-documentation
+
+# Mark React JSX and JS files as JavaScript
+*.jsx linguist-language=JavaScript
+*.js linguist-language=JavaScript
+*.css linguist-language=CSS
