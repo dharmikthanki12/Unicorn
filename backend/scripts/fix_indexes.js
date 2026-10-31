@@ -47,6 +47,35 @@ async function fixIndexes() {
     console.log('\nFinal indexes on "users":');
     console.log(JSON.stringify(indexes, null, 2));
 
+    // Clean up deposits collection indexes
+    const depositsCol = db.collection('deposits');
+    try {
+      await depositsCol.dropIndex('depositId_1');
+      console.log('✅ Dropped legacy depositId_1 index on deposits');
+    } catch(e) {
+      console.log('Notice on deposits depositId_1:', e.message);
+    }
+    const depIndexes = await depositsCol.indexes();
+    console.log('\nFinal indexes on "deposits":', JSON.stringify(depIndexes, null, 2));
+
+    // Clean up withdrawals collection indexes
+    const withdrawalsCol = db.collection('withdrawals');
+    try {
+      await withdrawalsCol.dropIndex('withdrawalId_1');
+      console.log('✅ Dropped legacy withdrawalId_1 index on withdrawals');
+    } catch(e) {}
+    const withIndexes = await withdrawalsCol.indexes();
+    console.log('\nFinal indexes on "withdrawals":', JSON.stringify(withIndexes, null, 2));
+
+    // Clean up investments collection indexes
+    const investmentsCol = db.collection('investments');
+    try {
+      await investmentsCol.dropIndex('investmentId_1');
+      console.log('✅ Dropped legacy investmentId_1 index on investments');
+    } catch(e) {}
+    const invIndexes = await investmentsCol.indexes();
+    console.log('\nFinal indexes on "investments":', JSON.stringify(invIndexes, null, 2));
+
     process.exit(0);
   } catch (err) {
     console.error('❌ Error fixing indexes:', err);
