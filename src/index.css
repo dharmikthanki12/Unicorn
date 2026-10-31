@@ -722,6 +722,8 @@ input, textarea, select {
 }
 
 .navbar-notif-menu {
+  left: 0 !important;
+  right: auto !important;
   width: 320px;
   border-radius: 18px;
   padding: 16px;
