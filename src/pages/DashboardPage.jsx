@@ -23,8 +23,6 @@ export function DashboardPage() {
   const [transferFrom, setTransferFrom] = useState('roi');
   const [transferAmount, setTransferAmount] = useState('');
 
-  const recentTxns = transactions.slice(0, 5);
-
   const mainWalletBalance = user?.mainWalletBalance ?? 0;
   const roiWalletBalance = user?.roiWalletBalance ?? 0;
   const referralWalletBalance = user?.referralWalletBalance ?? 0;
@@ -160,95 +158,116 @@ export function DashboardPage() {
 
         </div>
 
-        {/* Right Column: Transaction History Card matching Unicorn_Mobile_App.html Screen 13 */}
+        {/* Right Column: Top Earners Leaderboard Card */}
         <section className="card" style={{ flex: '1 1 440px', minWidth: 0, padding: '8px 24px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0 8px' }}>
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Transaction history</h2>
-            <button
-              onClick={() => navigateTo('transactions')}
-              style={{
-                fontSize: '14px',
-                color: 'var(--accent-text)',
-                fontWeight: 500,
-                minHeight: '44px',
-                display: 'flex',
-                alignItems: 'center',
-                cursor: 'pointer'
-              }}
-            >
-              See all
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0 10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>🏆</span>
+              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>Top Earners</h2>
+            </div>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              color: 'var(--accent-text)',
+              background: 'var(--icon-bg)',
+              padding: '4px 12px',
+              borderRadius: '20px'
+            }}>
+              Leaderboard
+            </span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {recentTxns.length > 0 ? (
-              recentTxns.map((t) => {
-                const iconD = t.type === 'deposit'
-                  ? ICONS.deposit
-                  : t.type === 'roi'
-                  ? ICONS.invest
-                  : t.type === 'referral'
-                  ? ICONS.referral
-                  : ICONS.wallet;
+            {[
+              { rank: 1, name: 'Vikram Patel', initials: 'VP', tier: 'Crown Unicorn · Tier 7', totalEarned: 1850000, dailyYield: '+₹22,500/day' },
+              { rank: 2, name: 'Kabir Nair', initials: 'KN', tier: 'Diamond Whale · Tier 6', totalEarned: 1240000, dailyYield: '+₹11,250/day' },
+              { rank: 3, name: 'Aarav Sharma', initials: 'AS', tier: 'Elite Portfolio · Tier 5', totalEarned: 780000, dailyYield: '+₹4,500/day' },
+              { rank: 4, name: 'Meera Iyer', initials: 'MI', tier: 'Premium Wealth · Tier 4', totalEarned: 510000, dailyYield: '+₹2,250/day' },
+              { rank: 5, name: user?.name || 'Rutajeet Mukherjee', initials: user?.initials || 'RM', tier: 'Gold Unicorn · Pro Trader', totalEarned: (user?.roiWalletBalance || 54000) + (user?.referralWalletBalance || 38750) + 250000, dailyYield: '+₹2,250/day', isUser: true }
+            ].map((earner) => (
+              <div
+                key={earner.rank}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  padding: '14px 0',
+                  borderTop: '1px solid var(--divider)',
+                  minHeight: '70px'
+                }}
+              >
+                {/* Rank number / medal */}
+                <div style={{
+                  width: '28px',
+                  fontSize: earner.rank <= 3 ? '18px' : '13px',
+                  fontWeight: 700,
+                  color: earner.rank === 1 ? '#F59E0B' : earner.rank === 2 ? '#94A3B8' : earner.rank === 3 ? '#B45309' : 'var(--muted)',
+                  textAlign: 'center',
+                  flex: 'none'
+                }}>
+                  {earner.rank === 1 ? '🥇' : earner.rank === 2 ? '🥈' : earner.rank === 3 ? '🥉' : `#${earner.rank}`}
+                </div>
 
-                const isPositive = (t.amountFormatted || '').startsWith('+');
+                {/* Avatar */}
+                <div style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '50%',
+                  background: earner.isUser ? 'var(--grad)' : 'linear-gradient(135deg, rgba(127, 92, 166, 0.25), rgba(181, 92, 169, 0.25))',
+                  color: earner.isUser ? '#ffffff' : 'var(--text)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  flex: 'none',
+                  border: earner.isUser ? '1px solid rgba(255,255,255,0.2)' : '1px solid var(--border)'
+                }}>
+                  {earner.initials}
+                </div>
 
-                return (
-                  <div
-                    key={t.id}
-                    onClick={() => navigateTo('transactions')}
+                {/* Name & Tier */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {earner.name}
+                    </span>
+                    {earner.isUser && (
+                      <span style={{
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        color: '#ffffff',
+                        background: 'var(--grad)',
+                        padding: '1px 6px',
+                        borderRadius: '10px'
+                      }}>
+                        You
+                      </span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                    {earner.tier}
+                  </span>
+                </div>
+
+                {/* Total Earnings & Daily Yield */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 }}>
+                  <span
+                    className="num"
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '14px',
-                      padding: '14px 0',
-                      borderTop: '1px solid var(--divider)',
-                      minHeight: '72px',
-                      cursor: 'pointer'
+                      fontSize: '15px',
+                      fontWeight: 700,
+                      color: 'var(--pos)'
                     }}
                   >
-                    <div style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '50%',
-                      background: 'var(--icon-bg)',
-                      color: 'var(--accent-text)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flex: 'none'
-                    }}>
-                      <Icon d={iconD} size={20} />
-                    </div>
-
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
-                      <span style={{ fontSize: '15px', fontWeight: 500 }}>{t.title}</span>
-                      <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{t.sub ? `${t.sub} · ` : ''}{t.date}</span>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                      <span
-                        className="num"
-                        style={{
-                          fontSize: '15px',
-                          fontWeight: 600,
-                          color: isPositive ? 'var(--pos)' : 'var(--text)'
-                        }}
-                      >
-                        {t.amountFormatted}
-                      </span>
-                      <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{t.status}</span>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: '14px', borderTop: '1px solid var(--divider)' }}>
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📜</div>
-                <p style={{ margin: '0 0 6px 0', fontWeight: 500, color: 'var(--text)' }}>No Transactions Yet</p>
-                <span style={{ fontSize: '13px' }}>Your deposit confirmations, 0.45% daily yields, and referral payouts will appear here in real time.</span>
+                    ₹{earner.totalEarned.toLocaleString('en-IN')}
+                  </span>
+                  <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                    {earner.dailyYield}
+                  </span>
+                </div>
               </div>
-            )}
+            ))}
           </div>
         </section>
       </div>
