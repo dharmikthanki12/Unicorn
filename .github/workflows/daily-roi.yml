@@ -1,0 +1,50 @@
+name: Daily 0.45% ROI Distribution Engine
+
+on:
+  schedule:
+    # Runs Monday to Friday at exactly 12:00 AM (midnight) IST (18:30 UTC Sun-Thu)
+    - cron: '30 18 * * 0-4'
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: 'Force run (bypass weekend & holiday pause for manual test)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  distribute-roi:
+    name: Execute Daily ROI & Multi-Level Referral Cycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install --omit=dev
+
+      - name: Run Daily ROI Engine
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI || 'mongodb+srv://zarwebcoders:zarwebcoders@cluster0.lqgakzj.mongodb.net/unicorn?retryWrites=true&w=majority' }}
+          NODE_ENV: production
+          SANDBOX_MODE: 'true'
+          FORCE_RUN: ${{ github.event.inputs.force_run || 'false' }}
+        run: |
+          node backend/scripts/trigger_roi.js
+
+      - name: Report Summary to GitHub
+        if: always()
+        run: |
+          echo "### 🦄 UNICORN Protocol — Daily ROI Cycle Report" >> $GITHUB_STEP_SUMMARY
+          echo "- **Execution Time:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered By:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Force Run Override:** ${{ github.event.inputs.force_run || 'false' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ${{ job.status == 'success' && '✅ Completed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
