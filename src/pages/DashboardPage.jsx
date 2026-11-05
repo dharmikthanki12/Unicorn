@@ -265,7 +265,12 @@ export function DashboardPage() {
                   <span style={{ fontSize: '13px', color: 'var(--pos)', fontWeight: 500 }}>
                     Today ({new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}) +{formatCurrency(todayReferralIncome)}
                   </span>
-                  <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {user?.totalDirects > 0 ? (
+                      <span style={{ color: 'var(--accent-text)', fontWeight: 600 }}>
+                        👥 {user.totalDirects} Direct Member{user.totalDirects > 1 ? 's' : ''} ·
+                      </span>
+                    ) : null}
                     Level 1–25+ Multi-Level ROI Sharing
                   </span>
                 </div>

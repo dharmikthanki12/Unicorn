@@ -367,3 +367,5 @@ export function InvestPage() {
     </div>
   );
 }
+
+export default InvestPage;
