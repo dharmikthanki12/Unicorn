@@ -49,3 +49,4 @@ main().catch(err => {
   console.error('Deployment error:', err.message);
   process.exit(1);
 });
+

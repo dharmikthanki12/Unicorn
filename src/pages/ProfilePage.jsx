@@ -22,7 +22,9 @@ export function ProfilePage() {
     openLoginModal,
     logout,
     submitKyc,
-    updateUserProfile
+    updateUserProfile,
+    requestEmailChangeOtp,
+    verifyEmailChangeOtp
   } = useApp();
 
   const [activeModal, setActiveModal] = useState(null);
@@ -33,6 +35,10 @@ export function ProfilePage() {
     email: user?.email || '',
     phone: user?.phone || ''
   });
+  const [emailOtp, setEmailOtp] = useState('');
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [otpError, setOtpError] = useState('');
   const [editingBank, setEditingBank] = useState(false);
   const [bankForm, setBankForm] = useState({
     upiId: user?.bankDetails?.upiId || '',
@@ -78,21 +84,59 @@ export function ProfilePage() {
     showToast(`${label} copied to clipboard!`);
   };
 
+  const isEmailChanged = (profileForm.email || '').trim().toLowerCase() !== (user?.email || '').trim().toLowerCase();
+
+  const handleSendEmailOtp = async () => {
+    const cleanEmail = (profileForm.email || '').trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      showToast('Please enter a valid new email address first.', 'error');
+      return;
+    }
+    setSendingOtp(true);
+    setOtpError('');
+    try {
+      if (requestEmailChangeOtp) {
+        await requestEmailChangeOtp(cleanEmail);
+      }
+      setEmailOtpSent(true);
+    } catch (err) {
+      setOtpError(err.message || 'Failed to send verification code.');
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
   const handleProfileSave = async (e) => {
     e.preventDefault();
     if (!profileForm.email || !profileForm.email.includes('@')) {
       showToast('Please enter a valid email address.', 'error');
       return;
     }
+
+    // If email is changed, enforce OTP step
+    if (isEmailChanged && !emailOtpSent) {
+      await handleSendEmailOtp();
+      return;
+    }
+
+    if (isEmailChanged && (!emailOtp || emailOtp.trim().length < 4)) {
+      showToast('Please enter the 6-digit verification code sent to your new email.', 'error');
+      return;
+    }
+
     try {
       await updateUserProfile({
         name: profileForm.name,
         email: profileForm.email,
-        phone: profileForm.phone
+        phone: profileForm.phone,
+        otp: isEmailChanged ? emailOtp.trim() : undefined
       });
       setEditingProfile(false);
+      setEmailOtpSent(false);
+      setEmailOtp('');
+      setOtpError('');
     } catch (err) {
-      // toast shown by updateUserProfile
+      setOtpError(err.message || 'Failed to update email.');
     }
   };
 
@@ -676,6 +720,9 @@ export function ProfilePage() {
                         phone: user?.phone || ''
                       });
                     }
+                    setEmailOtp('');
+                    setEmailOtpSent(false);
+                    setOtpError('');
                     setEditingProfile(!editingProfile);
                   }}
                   style={{ fontSize: '12px', color: 'var(--accent-text)', fontWeight: 600, background: 'transparent', border: 'none', cursor: 'pointer' }}
@@ -697,16 +744,130 @@ export function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', marginBottom: '4px' }}>Email Address</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '11px', color: 'var(--muted)', display: 'block' }}>Email Address</label>
+                      {isEmailChanged && (
+                        <span style={{ fontSize: '10px', color: 'var(--accent-text)', fontWeight: 600 }}>OTP Required for change</span>
+                      )}
+                    </div>
                     <input
                       type="email"
                       value={profileForm.email}
-                      onChange={e => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={e => {
+                        setProfileForm(prev => ({ ...prev, email: e.target.value }));
+                        setEmailOtpSent(false);
+                        setEmailOtp('');
+                        setOtpError('');
+                      }}
                       placeholder="e.g. user@unicorn.io"
                       required
-                      style={{ width: '100%', height: '40px', padding: '0 12px', borderRadius: '8px', background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '13px' }}
+                      style={{
+                        width: '100%',
+                        height: '40px',
+                        padding: '0 12px',
+                        borderRadius: '8px',
+                        background: 'var(--bg)',
+                        border: isEmailChanged ? '1px solid var(--accent-text)' : '1px solid var(--border)',
+                        color: 'var(--text)',
+                        fontSize: '13px'
+                      }}
                     />
                   </div>
+
+                  {/* Email Change OTP Security Verification Box */}
+                  {isEmailChanged && (
+                    <div style={{
+                      background: 'rgba(181, 92, 169, 0.12)',
+                      border: '1px solid rgba(181, 92, 169, 0.35)',
+                      borderRadius: '10px',
+                      padding: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent-text)' }}>
+                          🔒 Email Verification (OTP)
+                        </span>
+                        {!emailOtpSent && (
+                          <button
+                            type="button"
+                            onClick={handleSendEmailOtp}
+                            disabled={sendingOtp}
+                            style={{
+                              fontSize: '11px',
+                              background: 'var(--primary)',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '6px',
+                              padding: '4px 10px',
+                              cursor: 'pointer',
+                              fontWeight: 600
+                            }}
+                          >
+                            {sendingOtp ? 'Sending...' : 'Send OTP'}
+                          </button>
+                        )}
+                      </div>
+
+                      {emailOtpSent ? (
+                        <>
+                          <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                            Enter the 6-digit OTP code sent to <strong>{profileForm.email}</strong>:
+                          </span>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input
+                              type="text"
+                              maxLength={6}
+                              placeholder="6-digit OTP"
+                              value={emailOtp}
+                              onChange={e => setEmailOtp(e.target.value.replace(/\D/g, ''))}
+                              autoFocus
+                              style={{
+                                flex: 1,
+                                height: '38px',
+                                padding: '0 12px',
+                                borderRadius: '8px',
+                                background: 'var(--bg)',
+                                border: '1px solid var(--accent-text)',
+                                color: 'var(--text)',
+                                fontSize: '16px',
+                                letterSpacing: '4px',
+                                textAlign: 'center',
+                                fontWeight: 700
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleSendEmailOtp}
+                              disabled={sendingOtp}
+                              style={{
+                                height: '38px',
+                                padding: '0 12px',
+                                background: 'transparent',
+                                border: '1px solid var(--border)',
+                                borderRadius: '8px',
+                                color: 'var(--accent-text)',
+                                fontSize: '11px',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              {sendingOtp ? 'Sending...' : 'Resend'}
+                            </button>
+                          </div>
+                          {otpError && (
+                            <span style={{ fontSize: '11px', color: 'var(--neg)' }}>{otpError}</span>
+                          )}
+                        </>
+                      ) : (
+                        <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                          To change your registered email, a 6-digit verification code will be sent to your new email.
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <div>
                     <label style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', marginBottom: '4px' }}>Phone Number</label>
                     <input
@@ -718,7 +879,9 @@ export function ProfilePage() {
                     />
                   </div>
                   <button type="submit" className="btnp btnw" style={{ height: '40px', fontSize: '13px', borderRadius: '8px', cursor: 'pointer', marginTop: '4px' }}>
-                    Save Contact Details
+                    {isEmailChanged
+                      ? (emailOtpSent ? 'Verify OTP & Confirm Email Change' : 'Send OTP & Save Details')
+                      : 'Save Contact Details'}
                   </button>
                 </form>
               ) : (

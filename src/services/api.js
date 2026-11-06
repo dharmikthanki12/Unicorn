@@ -88,6 +88,14 @@ export const referralAPI = {
 export const userAPI = {
   getProfile: () => request('/user/profile'),
   updateProfile: (body) => request('/user/profile', { method: 'PATCH', body: JSON.stringify(body) }),
+  requestEmailChangeOtp: (newEmail) => request('/user/email/request-otp', {
+    method: 'POST',
+    body: JSON.stringify({ newEmail })
+  }),
+  verifyEmailChangeOtp: (newEmail, otp) => request('/user/email/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ newEmail, otp })
+  }),
   submitKyc: (body) => request('/user/kyc', { method: 'POST', body: JSON.stringify(body) })
 };
 

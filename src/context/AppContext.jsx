@@ -401,9 +401,9 @@ export function AppProvider({ children }) {
     return false;
   };
 
-  const updateUserProfile = async ({ name, email, phone }) => {
+  const updateUserProfile = async ({ name, email, phone, otp }) => {
     try {
-      const res = await userAPI.updateProfile({ name, email, phone });
+      const res = await userAPI.updateProfile({ name, email, phone, otp });
       if (res && res.user) {
         setUser(prev => prev ? {
           ...prev,
@@ -423,6 +423,34 @@ export function AppProvider({ children }) {
       return true;
     } catch (e) {
       showToast(e.message || 'Failed to update profile.', 'error');
+      throw e;
+    }
+  };
+
+  const requestEmailChangeOtp = async (newEmail) => {
+    try {
+      const res = await userAPI.requestEmailChangeOtp(newEmail);
+      showToast(res.message || 'Verification OTP sent to new email!');
+      return res;
+    } catch (e) {
+      showToast(e.message || 'Failed to send OTP to new email.', 'error');
+      throw e;
+    }
+  };
+
+  const verifyEmailChangeOtp = async (newEmail, otp) => {
+    try {
+      const res = await userAPI.verifyEmailChangeOtp(newEmail, otp);
+      if (res && res.user) {
+        setUser(prev => prev ? {
+          ...prev,
+          email: res.user.email || newEmail
+        } : null);
+      }
+      showToast(res.message || 'Email address updated successfully!');
+      return res;
+    } catch (e) {
+      showToast(e.message || 'Invalid or expired verification code.', 'error');
       throw e;
     }
   };
@@ -1837,6 +1865,8 @@ export function AppProvider({ children }) {
         connectWeb3MetaMask,
         connectWeb3Demo,
         updateUserProfile,
+        requestEmailChangeOtp,
+        verifyEmailChangeOtp,
         updateBankDetails,
         submitKyc,
         approveAdminRequest,

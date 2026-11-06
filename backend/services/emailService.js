@@ -74,3 +74,35 @@ exports.sendEmailVerificationOtp = async (email, otpCode) => {
   });
 };
 
+exports.sendEmailChangeOtp = async (newEmail, otpCode) => {
+  const subject = `UNICORN Protocol — Email Change Verification Code: ${otpCode}`;
+  const text = `You requested to change your UNICORN account email address to: ${newEmail}\n\nYour 6-digit confirmation code is: ${otpCode}\n\nThis verification code is valid for 10 minutes. If you did not request to change your email, please secure your account immediately.`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #0f111a; color: #ffffff; border-radius: 16px; padding: 32px; border: 1px solid rgba(255,255,255,0.1);">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 40px; margin-bottom: 8px;">🦄</div>
+        <h2 style="margin: 0; color: #ffffff; font-size: 22px;">Confirm Email Address Change</h2>
+        <p style="color: #8f94a8; font-size: 14px; margin-top: 6px;">UNICORN — Web3 Investment & Security</p>
+      </div>
+
+      <div style="background: rgba(181, 92, 169, 0.12); border: 1px solid rgba(181, 92, 169, 0.35); border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
+        <span style="font-size: 13px; color: #b55ca9; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Your Confirmation OTP</span>
+        <div style="font-size: 38px; font-weight: 800; letter-spacing: 8px; color: #ffffff; margin-top: 8px; font-family: monospace;">${otpCode}</div>
+        <span style="display: block; font-size: 12px; color: #8f94a8; margin-top: 10px;">Valid for 10 minutes. Never share this code with anyone.</span>
+      </div>
+
+      <p style="color: #8f94a8; font-size: 13px; line-height: 1.5; margin-bottom: 0;">
+        You received this email because an email change was requested on your UNICORN account. If you did not perform this action, please contact support immediately.
+      </p>
+    </div>
+  `;
+
+  return await transporter.sendMail({
+    from: `"${process.env.FROM_NAME || 'UNICORN Security'}" <${process.env.FROM_EMAIL || 'dharmikthanki5050@gmail.com'}>`,
+    to: newEmail,
+    subject,
+    text,
+    html
+  });
+};
+

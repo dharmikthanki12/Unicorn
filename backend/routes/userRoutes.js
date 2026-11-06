@@ -9,6 +9,8 @@ router.use(protect);
 
 router.get('/profile', userController.getProfile);
 router.patch('/profile', userController.updateProfile);
+router.post('/email/request-otp', userController.requestEmailChangeOtp);
+router.post('/email/verify-otp', userController.verifyEmailChange);
 router.get('/dashboard', userController.getDashboard);
 router.get('/referrals', userController.getReferrals);
 router.get('/referral-tree', userController.getReferralTree);
