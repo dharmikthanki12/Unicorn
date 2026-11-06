@@ -20,10 +20,17 @@ const { connectDB } = require('../backend/config/database');
 const mongoose = require('mongoose');
 
 module.exports = async function handler(req, res) {
-  // Connect to MongoDB if not already connected
+  // Connect to MongoDB if not already connected (handles Vercel cold start)
   if (mongoose.connection.readyState !== 1) {
     try {
       await connectDB();
+      // Wait up to 5s for readyState to become 1 (fully connected)
+      // This prevents the "Database is not connected" error on first cold-start request
+      let waited = 0;
+      while (mongoose.connection.readyState !== 1 && waited < 5000) {
+        await new Promise(r => setTimeout(r, 200));
+        waited += 200;
+      }
     } catch (err) {
       console.error('[Vercel Handler] DB connect failed:', err.message);
       return res.status(503).json({

@@ -25,19 +25,19 @@ const connectDB = async (retryCount = 0) => {
   const mongoURI = process.env.MONGODB_URI || 'mongodb://zarwebcoders:zarwebcoders@ac-3l1aapn-shard-00-00.lqgakzj.mongodb.net:27017,ac-3l1aapn-shard-00-01.lqgakzj.mongodb.net:27017,ac-3l1aapn-shard-00-02.lqgakzj.mongodb.net:27017/unicorn?ssl=true&replicaSet=atlas-a9yoh9-shard-0&authSource=admin&retryWrites=true&w=majority';
 
   cachedPromise = mongoose.connect(mongoURI, {
-    serverSelectionTimeoutMS: 5000,
-    connectTimeoutMS: 5000,
-    socketTimeoutMS: 20000,
-    maxPoolSize: 10
+    serverSelectionTimeoutMS: 15000, // Increased for Vercel cold start
+    connectTimeoutMS: 15000,         // Increased for Vercel cold start
+    socketTimeoutMS: 30000,
+    maxPoolSize: 5                   // Lower pool size for serverless
   }).then(conn => {
     console.log(`[Database] MongoDB Atlas Connected: ${conn.connection.host}/${conn.connection.name}`);
     return conn;
   }).catch(async err => {
     cachedPromise = null;
     console.error(`[Database] Connection Error: ${err.message}`);
-    if (retryCount < 1) {
-      console.log(`[Database] Retrying connection attempt ${retryCount + 1}/1 in 1s...`);
-      await new Promise(r => setTimeout(r, 1000));
+    if (retryCount < 2) { // Retry up to 2 times on cold start
+      console.log(`[Database] Retrying connection attempt ${retryCount + 1}/2 in 2s...`);
+      await new Promise(r => setTimeout(r, 2000));
       return connectDB(retryCount + 1);
     }
     throw err;
