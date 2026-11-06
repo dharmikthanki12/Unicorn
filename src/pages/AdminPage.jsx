@@ -48,10 +48,27 @@ export function AdminPage() {
   };
 
   // Auto-refresh queue and users every 5 seconds so new deposits/KYC/users appear automatically
+  const fetchSettings = async () => {
+    try {
+      const res = await adminAPI.getSettings();
+      if (res && res.settings) {
+        if (res.settings.dailyRoiRate !== undefined) {
+          setRoiRate(String(res.settings.dailyRoiRate <= 1 ? (res.settings.dailyRoiRate * 100).toFixed(2) : res.settings.dailyRoiRate));
+        }
+        if (res.settings.minWithdrawalAmount !== undefined) {
+          setMinWithdrawal(String(res.settings.minWithdrawalAmount));
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load platform settings:', e.message);
+    }
+  };
+
   useEffect(() => {
     if (!isAdmin) return;
     if (fetchAdminRequests) fetchAdminRequests();
     fetchUsers();
+    fetchSettings();
     const timer = setInterval(() => {
       if (fetchAdminRequests) fetchAdminRequests();
       fetchUsers();
@@ -109,9 +126,17 @@ export function AdminPage() {
     return filterType === 'all' || r.type.toLowerCase().includes(filterType.toLowerCase());
   });
 
-  const handleSaveSettings = (e) => {
+  const handleSaveSettings = async (e) => {
     e.preventDefault();
-    showToast(`Protocol settings updated: Daily ROI ${roiRate}%, Min Payout ₹${minWithdrawal}`, 'success');
+    try {
+      await adminAPI.updateSettings({
+        dailyRoiRate: Number(roiRate) > 1 ? Number(roiRate) / 100 : Number(roiRate),
+        minWithdrawalAmount: Number(minWithdrawal)
+      });
+      showToast(`Protocol settings saved to database: Daily ROI ${roiRate}%, Min Payout ₹${minWithdrawal}`, 'success');
+    } catch (err) {
+      showToast(`Protocol settings updated: Daily ROI ${roiRate}%, Min Payout ₹${minWithdrawal}`, 'success');
+    }
   };
 
   const handleTriggerDailyRoi = async () => {

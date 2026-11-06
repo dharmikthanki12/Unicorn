@@ -115,6 +115,11 @@ export const adminAPI = {
     method: 'POST',
     body: body ? JSON.stringify(body) : undefined
   }),
-  triggerDailyROI: () => request('/admin/roi/trigger', { method: 'POST' })
+  triggerDailyROI: () => request('/admin/roi/trigger', { method: 'POST' }),
+  getSettings: () => request('/admin/settings'),
+  updateSettings: (body) => request('/admin/settings', {
+    method: 'POST',
+    body: JSON.stringify(body)
+  })
 };
 

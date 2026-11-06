@@ -7,8 +7,8 @@ const DEFAULT_PACKAGES = [
   { id: 'pro', tier: 3, name: 'Pro Trader', amount: 250000, usdValue: 2500, dailyRoiRate: 0.0045, dailyReturn: 1125, monthlyReturn: 24750, bonusUnc: 25000, tag: 'Advanced', color: '#B55CA9' },
   { id: 'premium', tier: 4, name: 'Premium Wealth', amount: 500000, usdValue: 5000, dailyRoiRate: 0.0045, dailyReturn: 2250, monthlyReturn: 49500, bonusUnc: 50000, tag: 'Active Plan', color: '#C46DB2' },
   { id: 'elite', tier: 5, name: 'Elite Portfolio', amount: 1000000, usdValue: 10000, dailyRoiRate: 0.0045, dailyReturn: 4500, monthlyReturn: 99000, bonusUnc: 100000, tag: 'High Yield', color: '#D854A8' },
-  { id: 'platinum', tier: 6, name: 'Platinum Staking', amount: 2500000, usdValue: 25000, dailyRoiRate: 0.0045, dailyReturn: 11250, monthlyReturn: 247500, bonusUnc: 250000, tag: 'Institutional', color: '#E06BB0' },
-  { id: 'vip', tier: 7, name: 'VIP Unicorn', amount: 5000000, usdValue: 50000, dailyRoiRate: 0.0045, dailyReturn: 22500, monthlyReturn: 495000, bonusUnc: 500000, tag: 'Max Tier', color: '#A655D0' }
+  { id: 'diamond', tier: 6, name: 'Diamond Whale', amount: 2500000, usdValue: 25000, dailyRoiRate: 0.0045, dailyReturn: 11250, monthlyReturn: 247500, bonusUnc: 250000, tag: 'VIP Club', color: '#D495BD' },
+  { id: 'crown', tier: 7, name: 'Crown Unicorn', amount: 5000000, usdValue: 50000, dailyRoiRate: 0.0045, dailyReturn: 22500, monthlyReturn: 495000, bonusUnc: 500000, tag: 'Legendary', color: '#DDAAC9' }
 ];
 
 // Helper to ensure packages exist
